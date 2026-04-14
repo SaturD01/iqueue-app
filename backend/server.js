@@ -11,7 +11,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const morgan = require('morgan');
+const morgan = require('morgan'); 
 const dotenv = require('dotenv');
 const http = require('http');
 
@@ -33,6 +33,10 @@ app.use(morgan('dev'));
 const authRoutes = require('./routes/auth.route');
 app.use('/api/auth', authRoutes);
 
+// Start background cron jobs
+const { startCronJobs } = require('./services/cron.service');
+startCronJobs();
+
 // Health check
 app.get('/', (req, res) => {
   res.json({
@@ -44,6 +48,7 @@ app.get('/', (req, res) => {
 });
 
 // Database connection
+
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('MongoDB Atlas connected successfully');
