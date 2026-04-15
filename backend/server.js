@@ -46,6 +46,46 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+// Temporary Claude AI test routes — remove before final deployment
+const { getStaffingRecommendation, getNoShowRiskFlags, getNotifyThreshold } = require('./services/claude.service');
+
+app.get('/test-claude-1', async (req, res) => {
+  const result = await getStaffingRecommendation({
+    hourlyStats: [
+      { hour: 8, avgServed: 5, avgServiceTimeMinutes: 5.1 },
+      { hour: 9, avgServed: 12, avgServiceTimeMinutes: 6.3 },
+      { hour: 10, avgServed: 22, avgServiceTimeMinutes: 7.1 },
+      { hour: 11, avgServed: 25, avgServiceTimeMinutes: 7.8 },
+      { hour: 14, avgServed: 19, avgServiceTimeMinutes: 6.9 },
+      { hour: 17, avgServed: 3, avgServiceTimeMinutes: 4.5 },
+    ],
+    sevenDayTrend: [
+      { date: '2026-04-08', totalServed: 82, noShowRate: 0.06 },
+      { date: '2026-04-09', totalServed: 91, noShowRate: 0.04 },
+      { date: '2026-04-10', totalServed: 78, noShowRate: 0.08 },
+    ]
+  });
+  res.json(result);
+});
+
+app.get('/test-claude-2', async (req, res) => {
+  const result = await getNoShowRiskFlags([
+    { tokenId: 'CF-007', noShowCount: 3, totalVisits: 10 },
+    { tokenId: 'CF-008', noShowCount: 1, totalVisits: 5 },
+    { tokenId: 'CF-009', noShowCount: 0, totalVisits: 3 },
+    { tokenId: 'CF-010', noShowCount: 0, totalVisits: 1 },
+  ]);
+  res.json(result);
+});
+
+app.get('/test-claude-3', async (req, res) => {
+  const result = await getNotifyThreshold({
+    avgServiceTimeMinutes: 7.2,
+    currentQueueLength: 14,
+    historicalAvgGapMinutes: 12,
+  });
+  res.json({ notifyWhenPosition: result });
+});
 
 // Database connection
 
