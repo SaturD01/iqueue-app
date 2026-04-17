@@ -64,6 +64,7 @@
 | Staff Panel page | In Progress | M3 | feature/staff-panel |
 | TV Display page | In Progress | M3 | feature/tv-display |
 | Manager Dashboard page | In Progress | M3 | feature/manager-dashboard |
+| Admin Panel page | ⏳ In Progress | M4 — Ilangasinghe | feature/admin-panel |
 | AWS Deployment | Pending | M1 | — |
 
 ## Project Structure
