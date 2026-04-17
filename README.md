@@ -50,22 +50,32 @@
 
 | Feature | Status | Owner | Branch |
 |---------|--------|-------|--------|
-| Express server + JWT auth | Complete | M1 | feature/backend-core |
-| Email service (Nodemailer) | Complete | M1 | feature/backend-core |
-| node-cron no-show scheduler | Complete | M1 | feature/backend-core |
-| Claude AI module (3 outputs) | Complete | M1 | feature/backend-core |
-| Live Queue Tracker page | Complete | M1 | feature/tracker-page |
-| MongoDB schemas | In Progress | M4 | feature/token-api |
-| Token API routes | In Progress | M4 | feature/token-api |
-| Socket.io real-time engine | In Progress | M4 | feature/socketio |
-| Register page | In Progress | M2 | feature/register-page |
-| Login page | In Progress | M2 | feature/login-page |
-| Booking page | In Progress | M2 | feature/booking-page |
-| Staff Panel page | In Progress | M3 | feature/staff-panel |
-| TV Display page | In Progress | M3 | feature/tv-display |
-| Manager Dashboard page | In Progress | M3 | feature/manager-dashboard |
+| Express server + JWT auth | ✅ Complete | M1 — Wickramaratne | feature/backend-core |
+| Email service (Nodemailer) | ✅ Complete | M1 — Wickramaratne | feature/backend-core |
+| node-cron no-show scheduler | ✅ Complete | M1 — Wickramaratne | feature/backend-core |
+| Claude AI module (3 outputs) | ✅ Complete | M1 — Wickramaratne | feature/backend-core |
+| Live Queue Tracker page | ✅ Complete | M1 — Wickramaratne | feature/tracker-page |
+| MongoDB schemas | ⏳ In Progress | M4 — Ilangasinghe | feature/token-api |
+| Token API routes | ⏳ In Progress | M4 — Ilangasinghe | feature/token-api |
+| Socket.io real-time engine | ⏳ In Progress | M4 — Ilangasinghe | feature/socketio |
+| Register page | ⏳ In Progress | M2 — Dhanushi | feature/register-page |
+| Login page | ⏳ In Progress | M2 — Dhanushi | feature/login-page |
+| Booking page | ⏳ In Progress | M2 — Dhanushi | feature/booking-page |
+| Staff Panel page | ⏳ In Progress | M3 — Premarathna | feature/staff-panel |
+| TV Display page | ⏳ In Progress | M3 — Premarathna | feature/tv-display |
+| Manager Dashboard | ⏳ In Progress | M3 — Premarathna | feature/manager-dashboard |
 | Admin Panel page | ⏳ In Progress | M4 — Ilangasinghe | feature/admin-panel |
-| AWS Deployment | Pending | M1 | — |
+| AWS Deployment | 🔲 Pending | M1 — Wickramaratne | — |
+
+## Team
+
+| Member | Role | Student ID |
+|--------|------|------------|
+| WDD Wickramaratne | Technical Lead — Backend + AI |
+| IMT Ilangasinghe | Technical Member — API + Database | 
+| TG Dhanushi Uttara | Frontend Developer |
+| RVS Premarathna | Frontend Developer | 
+
 
 ## Project Structure
 
