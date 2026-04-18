@@ -55,7 +55,8 @@
 | node-cron no-show scheduler | ✅ Complete | M1 — Wickramaratne | feature/backend-core |
 | Claude AI module (3 outputs) | ✅ Complete | M1 — Wickramaratne | feature/backend-core |
 | Live Queue Tracker page | ✅ Complete | M1 — Wickramaratne | feature/tracker-page |
-| MongoDB schemas | ⏳ In Progress | M4 — Ilangasinghe | feature/token-api |
+| MongoDB schemas | ⏳ In Progress | M1 — Wickramaratne | feature/backend-core |
+| MongoDB Atlas setup | ⏳ In Progress | M4 — Ilangasinghe | feature/token-api |
 | Token API routes | ⏳ In Progress | M4 — Ilangasinghe | feature/token-api |
 | Socket.io real-time engine | ⏳ In Progress | M4 — Ilangasinghe | feature/socketio |
 | Register page | ⏳ In Progress | M2 — Dhanushi | feature/register-page |
