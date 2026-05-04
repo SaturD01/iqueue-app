@@ -98,7 +98,7 @@ export default function RegisterPage() {
                 <input
                   type='text' name='name' value={form.name} onChange={handleChange}
                   placeholder='Nimali Fernando'
-                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-gray-800 outline-none transition ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 />
                 {errors.name && <p className='text-red-500 text-xs mt-1'>{errors.name}</p>}
               </div>
@@ -109,7 +109,7 @@ export default function RegisterPage() {
                 <input
                   type='email' name='email' value={form.email} onChange={handleChange}
                   placeholder='nimali@gmail.com'
-                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-gray-800 outline-none transition ${errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 />
                 {errors.email && <p className='text-red-500 text-xs mt-1'>{errors.email}</p>}
               </div>
@@ -120,7 +120,7 @@ export default function RegisterPage() {
                 <input
                   type='text' name='phone' value={form.phone} onChange={handleChange}
                   placeholder='0771234567'
-                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-gray-800 outline-none transition ${errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 />
                 {errors.phone && <p className='text-red-500 text-xs mt-1'>{errors.phone}</p>}
               </div>
@@ -131,7 +131,7 @@ export default function RegisterPage() {
                 <input
                   type='password' name='password' value={form.password} onChange={handleChange}
                   placeholder='Minimum 8 characters'
-                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-gray-800 outline-none transition ${errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 />
                 {errors.password && <p className='text-red-500 text-xs mt-1'>{errors.password}</p>}
               </div>
@@ -142,7 +142,7 @@ export default function RegisterPage() {
                 <input
                   type='password' name='confirmPassword' value={form.confirmPassword} onChange={handleChange}
                   placeholder='Re-enter your password'
-                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.confirmPassword ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-gray-800 outline-none transition ${errors.confirmPassword ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 />
                 {errors.confirmPassword && <p className='text-red-500 text-xs mt-1'>{errors.confirmPassword}</p>}
               </div>
