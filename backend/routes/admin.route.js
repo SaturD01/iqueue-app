@@ -11,8 +11,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { verifyToken } = require('../middleware/auth');
-const { requireRole } = require('../middleware/requireRole');
+const verifyToken = require('../middleware/auth');
+const requireRole = require('../middleware/requireRole');
 
 // Models imported inside routes to avoid issues before
 // B's schemas are merged to main
