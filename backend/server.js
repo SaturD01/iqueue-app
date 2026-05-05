@@ -5,17 +5,20 @@
  * @created 2026-04-13
  *
  * @routes registered
- *   /api/auth — authentication routes (register, login)
+ *   /api/auth  — authentication routes (register, login)
+ *   /api/admin — admin user management routes
  */
 
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-const morgan = require('morgan'); 
+const morgan = require('morgan');
 const dotenv = require('dotenv');
 const http = require('http');
 
 dotenv.config();
+
+const connectDB = require('./config/db');
+connectDB();
 
 const app = express();
 const server = http.createServer(app);
@@ -33,6 +36,9 @@ app.use(morgan('dev'));
 const authRoutes = require('./routes/auth.route');
 app.use('/api/auth', authRoutes);
 
+const adminRoutes = require('./routes/admin.route');
+app.use('/api/admin', adminRoutes);
+
 // Start background cron jobs
 const { startCronJobs } = require('./services/cron.service');
 startCronJobs();
@@ -46,15 +52,6 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-// Database connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('MongoDB Atlas connected successfully');
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err.message);
-    console.log('Server running without database — limited functionality');
-  });
 
 // Start server
 const PORT = process.env.PORT || 5000;
