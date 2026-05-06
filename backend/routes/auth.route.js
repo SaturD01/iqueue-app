@@ -1,35 +1,21 @@
 /**
  * @file auth.route.js
- * @description Authentication routes — register and login
+ * @description Authentication routes using real MongoDB User model
  * @author M1 — WDD Wickramaratne (22UG3-0550)
- * @created 2026-04-13
- *
- * @routes
- *   POST /api/auth/register — create new user account
- *   POST /api/auth/login    — authenticate and receive JWT token
- *
- * @note
- *   Currently uses temporary in-memory store for users.
- *   Will be replaced with MongoDB User model when M4 completes
- *   the database schema implementation (feature/token-api branch).
+ * @updated 2026-05-05
  */
 
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
+const User = require('../models/User');
 
-// Temporary in-memory user store — replaced by MongoDB when M4 merges schemas
-let tempUsers = [];
-
-// ─────────────────────────────────────────
 // POST /api/auth/register
-// ─────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
 
-    // Validate all required fields are present
     if (!name || !email || !phone || !password) {
       return res.status(400).json({
         success: false,
@@ -37,7 +23,6 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
@@ -46,7 +31,6 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Validate password minimum length
     if (password.length < 8) {
       return res.status(400).json({
         success: false,
@@ -54,8 +38,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Check for duplicate email
-    const existingUser = tempUsers.find(u => u.email === email);
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -63,27 +46,18 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Hash password with bcryptjs — 12 rounds as per security standard
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Build user object
-    const newUser = {
-      id: Date.now().toString(),
+    const newUser = await User.create({
       name,
       email,
       phone,
       passwordHash,
       role: 'customer',
-      noShowCount: 0,
-      totalVisits: 0,
-      createdAt: new Date().toISOString()
-    };
+    });
 
-    tempUsers.push(newUser);
-
-    // Sign JWT with user id, role, and email
     const token = jwt.sign(
-      { id: newUser.id, role: newUser.role, email: newUser.email },
+      { id: newUser._id, role: newUser.role, email: newUser.email },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
@@ -93,7 +67,7 @@ router.post('/register', async (req, res) => {
       message: 'Account created successfully',
       token,
       user: {
-        id: newUser.id,
+        id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         role: newUser.role
@@ -104,14 +78,12 @@ router.post('/register', async (req, res) => {
     console.error('Register error:', error.message);
     res.status(500).json({
       success: false,
-      message: 'Server error during registration. Please try again.'
+      message: 'Server error during registration'
     });
   }
 });
 
-// ─────────────────────────────────────────
 // POST /api/auth/login
-// ─────────────────────────────────────────
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -123,8 +95,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Find user by email in temp store
-    const user = tempUsers.find(u => u.email === email);
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -132,7 +103,6 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Compare submitted password against stored hash
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -141,9 +111,8 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Sign JWT token
     const token = jwt.sign(
-      { id: user.id, role: user.role, email: user.email },
+      { id: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
@@ -153,7 +122,7 @@ router.post('/login', async (req, res) => {
       message: 'Login successful',
       token,
       user: {
-        id: user.id,
+        id: user._id,
         name: user.name,
         email: user.email,
         role: user.role
@@ -164,7 +133,7 @@ router.post('/login', async (req, res) => {
     console.error('Login error:', error.message);
     res.status(500).json({
       success: false,
-      message: 'Server error during login. Please try again.'
+      message: 'Server error during login'
     });
   }
 });
