@@ -2,14 +2,23 @@
 
 import { useState, useEffect } from 'react';
 
-const NOW_SERVING = { tokenNumber: 'CF-005', service: 'Cash Deposit' };
+const NOW_SERVING = {
+  1: { tokenNumber: 'CA-003', counter: 'Counter 1', sublabel: 'Cash Services' },
+  2: { tokenNumber: 'AC-002', counter: 'Counter 2', sublabel: 'Account Services' },
+  3: { tokenNumber: 'LI-001', counter: 'Counter 3', sublabel: 'Loans & Inquiry' },
+};
 
-const UP_NEXT = [
-  { tokenNumber: 'CF-006', service: 'Loan Inquiry' },
-  { tokenNumber: 'CF-007', service: 'Card Services' },
-  { tokenNumber: 'CF-008', service: 'Account Opening' },
-  { tokenNumber: 'CF-009', service: 'General Inquiry' },
-];
+const UP_NEXT = {
+  1: ['CA-004', 'CA-005', 'CA-006'],
+  2: ['AC-003', 'AC-004', 'AC-005'],
+  3: ['LI-002', 'LI-003', 'LI-004'],
+};
+
+const COUNTER_COLORS = {
+  1: { border: 'border-blue-400',   bg: 'bg-blue-900',   badge: 'bg-blue-700',   text: 'text-blue-300' },
+  2: { border: 'border-teal-400',   bg: 'bg-teal-900',   badge: 'bg-teal-700',   text: 'text-teal-300' },
+  3: { border: 'border-indigo-400', bg: 'bg-indigo-900', badge: 'bg-indigo-700', text: 'text-indigo-300' },
+};
 
 export default function TVDisplayPage() {
   const [time, setTime] = useState('');
@@ -17,7 +26,9 @@ export default function TVDisplayPage() {
   useEffect(() => {
     const update = () => {
       const now = new Date();
-      setTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }));
+      setTime(now.toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', hour12: true
+      }));
     };
     update();
     const interval = setInterval(update, 1000);
@@ -25,59 +36,83 @@ export default function TVDisplayPage() {
   }, []);
 
   return (
-    <div className='min-h-screen bg-blue-900 flex flex-col overflow-hidden'>
+    <div className="min-h-screen bg-gray-950 flex flex-col overflow-hidden">
 
       {/* Top bar */}
-      <div className='flex items-center justify-between px-8 py-4 border-b border-blue-800'>
-        <div className='flex items-center gap-3'>
-          <span className='text-white font-bold text-2xl'>iQueue</span>
-          <span className='text-blue-400 text-sm'>Smart Bank Queue</span>
+      <div className="flex items-center justify-between px-8 py-4 border-b border-gray-800">
+        <div className="flex items-center gap-3">
+          <span className="text-white font-bold text-2xl">iQueue</span>
+          <span className="text-gray-500 text-sm">Smart Bank Queue System</span>
         </div>
-        <div className='flex items-center gap-3'>
-          <span className='w-2 h-2 bg-green-400 rounded-full animate-pulse'></span>
-          <span className='text-blue-300 text-sm font-mono'>{time}</span>
-        </div>
-      </div>
-
-      {/* NOW SERVING — top 60% */}
-      <div className='flex-1 flex flex-col items-center justify-center px-8'>
-        <p className='text-blue-400 text-lg uppercase tracking-widest mb-4'>Now Serving</p>
-        <p
-          className='font-black text-white leading-none mb-4'
-          style={{ fontSize: 'clamp(80px, 18vw, 160px)' }}
-        >
-          {NOW_SERVING.tokenNumber}
-        </p>
-        <div className='bg-blue-800 px-8 py-3 rounded-2xl'>
-          <p className='text-blue-200 text-xl font-medium'>{NOW_SERVING.service}</p>
+        <div className="flex items-center gap-3">
+          <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+          <span className="text-gray-400 text-sm font-mono">{time}</span>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className='border-t border-blue-800 mx-8'></div>
+      {/* NOW SERVING — 3 counters */}
+      <div className="flex-1 grid grid-cols-3 gap-6 px-8 py-6">
+        {[1, 2, 3].map(counterId => {
+          const serving = NOW_SERVING[counterId];
+          const next = UP_NEXT[counterId];
+          const colors = COUNTER_COLORS[counterId];
 
-      {/* UP NEXT — bottom 40% */}
-      <div className='px-8 py-6'>
-        <p className='text-blue-400 text-sm uppercase tracking-widest mb-4 text-center'>Up Next</p>
-        <div className='grid grid-cols-4 gap-4'>
-          {UP_NEXT.map((token, index) => (
+          return (
             <div
-              key={token.tokenNumber}
-              className={`rounded-2xl p-4 text-center ${index === 0 ? 'bg-blue-700 border-2 border-blue-400' : 'bg-blue-800'}`}
+              key={counterId}
+              className={`${colors.bg} rounded-2xl border-2 ${colors.border} flex flex-col overflow-hidden`}
             >
-              <p className={`font-bold text-white ${index === 0 ? 'text-3xl' : 'text-2xl'}`}>
-                {token.tokenNumber}
-              </p>
-              <p className='text-blue-300 text-xs mt-1'>{token.service}</p>
+              {/* Counter header */}
+              <div className={`${colors.badge} px-4 py-3 text-center`}>
+                <p className="text-white font-bold text-sm">{serving.counter}</p>
+                <p className={`${colors.text} text-xs`}>{serving.sublabel}</p>
+              </div>
+
+              {/* Now serving */}
+              <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
+                <p className={`${colors.text} text-xs uppercase tracking-widest mb-3`}>
+                  Now Serving
+                </p>
+                <p
+                  className="font-black text-white leading-none"
+                  style={{ fontSize: 'clamp(40px, 6vw, 80px)' }}
+                >
+                  {serving.tokenNumber}
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className={`border-t ${colors.border} mx-4 opacity-40`}></div>
+
+              {/* Up next */}
+              <div className="px-4 py-4">
+                <p className={`${colors.text} text-xs uppercase tracking-widest mb-3 text-center`}>
+                  Up Next
+                </p>
+                <div className="space-y-2">
+                  {next.map((tokenNumber, index) => (
+                    <div
+                      key={tokenNumber}
+                      className={`flex items-center justify-center px-3 py-2 rounded-lg ${
+                        index === 0 ? colors.badge : 'bg-black/20'
+                      }`}
+                    >
+                      <span className={`font-bold text-white ${index === 0 ? 'text-base' : 'text-sm'}`}>
+                        {tokenNumber}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
       {/* Footer */}
-      <div className='px-8 py-3 text-center border-t border-blue-800'>
-        <p className='text-blue-500 text-xs'>
-          Please proceed to the counter when your token is called — iQueue Smart Bank Queue Management
+      <div className="px-8 py-3 text-center border-t border-gray-800">
+        <p className="text-gray-600 text-xs">
+          Please proceed to your counter when your token is called — iQueue Smart Bank Queue Management
         </p>
       </div>
 
