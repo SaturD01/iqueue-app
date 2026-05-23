@@ -5,9 +5,15 @@
  * @created 2026-04-13
  *
  * @routes registered
- *   /api/auth  — authentication routes (register, login)
- *   /api/admin — admin user management routes
+ *   /api/auth       — authentication routes (register, login)
+ *   /api/admin      — admin user management routes
+ *   /api/branches   — branch listing routes
+ *   /api/tokens     — token booking and queue management routes
+ *   /api/analytics  — branch analytics routes
+ *   /api/ratings    — service rating routes
  */
+
+'use strict';
 
 const express = require('express');
 const cors = require('cors');
@@ -38,6 +44,18 @@ app.use('/api/auth', authRoutes);
 
 const adminRoutes = require('./routes/admin.route');
 app.use('/api/admin', adminRoutes);
+
+const branchRoutes = require('./routes/branch.route');
+app.use('/api/branches', branchRoutes);
+
+const tokenRoutes = require('./routes/token.route');
+app.use('/api/tokens', tokenRoutes);
+
+const analyticsRoutes = require('./routes/analytics.route');
+app.use('/api/analytics', analyticsRoutes);
+
+const ratingRoutes = require('./routes/rating.route');
+app.use('/api/ratings', ratingRoutes);
 
 // Start background cron jobs
 const { startCronJobs } = require('./services/cron.service');
