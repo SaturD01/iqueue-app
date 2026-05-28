@@ -1,3 +1,4 @@
+const socketService = require('../services/socket.service');
 const express = require('express');
 const router = express.Router();
 const Token = require('../models/Token');
@@ -164,6 +165,21 @@ router.post('/call-next', verifyToken, async (req, res) => {
 
     await next.save();
 
+    const updatedQueue = await Token.find({
+    branchId: next.branchId,
+    status: { $in: ['CALLABLE', 'CALLED'] },
+    }).sort({ position: 1 });
+
+    socketService.emitTokenCalled(
+    next.branchId.toString(),
+    next
+    );
+
+    socketService.emitQueueUpdated(
+    next.branchId.toString(),
+    updatedQueue
+    );
+
     res.status(200).json({
       success: true,
       message: `Now calling ${next.tokenNumber}`,
@@ -191,6 +207,21 @@ router.patch('/:id/served', verifyToken, async (req, res) => {
         message: 'Token not found',
       });
     }
+
+    const updatedQueue = await Token.find({
+      branchId: token.branchId,
+      status: { $in: ['CALLABLE', 'CALLED'] },
+    }).sort({ position: 1 });
+
+    socketService.emitTokenServed(
+      token.branchId.toString(),
+      token
+    );
+
+    socketService.emitQueueUpdated(
+      token.branchId.toString(),
+      updatedQueue
+    );
 
     res.status(200).json({
       success: true,
