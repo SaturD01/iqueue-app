@@ -148,5 +148,79 @@ const sendItsYourTurn = async ({
     console.error(`Failed to send its your turn email to ${to}:`, error.message);
   }
 };
+/**
+ * sendWalkInConfirmation
+ * Sends a booking confirmation email to a walk-in customer
+ * who does not have an iQueue account. Includes tracker link.
+ *
+ * @param {Object} params
+ * @param {string} params.to - Customer email address
+ * @param {string} params.walkInName - Customer name entered by staff
+ * @param {string} params.tokenNumber - Token number e.g. CF-007
+ * @param {string} params.branchName - Branch name
+ * @param {string} params.serviceName - Service type
+ */
+const sendWalkInConfirmation = async ({
+  to,
+  walkInName,
+  tokenNumber,
+  branchName,
+  serviceName,
+}) => {
+  try {
+    const mailOptions = {
+      from: `"iQueue System" <${process.env.GMAIL_USER}>`,
+      to,
+      subject: `iQueue — Your Token ${tokenNumber}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #002244; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0;">iQueue</h1>
+            <p style="color: #aabbcc; margin: 5px 0;">Smart Bank Queue Management</p>
+          </div>
+          <div style="padding: 30px; background-color: #f9f9f9;">
+            <h2 style="color: #002244;">Your token has been booked!</h2>
+            <p>Hi <strong>${walkInName}</strong>,</p>
+            <p>A staff member has booked a token for you at <strong>${branchName}</strong>.</p>
+            <div style="background-color: white; border: 1px solid #ddd;
+                        border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+              <p style="color: #888; font-size: 12px; text-transform: uppercase; 
+                         letter-spacing: 2px; margin: 0;">Your Token Number</p>
+              <p style="font-size: 64px; font-weight: bold; 
+                         color: #002244; margin: 10px 0;">${tokenNumber}</p>
+              <p style="color: #555; margin: 0;"><strong>Service:</strong> ${serviceName}</p>
+              <p style="color: #555; margin: 5px 0;"><strong>Branch:</strong> ${branchName}</p>
+            </div>
+            <p>You can track your live queue position here:</p>
+            <a href="${process.env.FRONTEND_URL}/tracker"
+               style="display: block; background-color: #002244; color: white;
+                      text-align: center; padding: 14px; border-radius: 8px;
+                      text-decoration: none; font-weight: bold; font-size: 16px;">
+              Track My Queue Position
+            </a>
+            <div style="background-color: #fff3cd; border: 1px solid #ffc107;
+                        border-radius: 8px; padding: 15px; margin: 20px 0;">
+              <p style="color: #856404; margin: 0;">
+                <strong>Please watch the display screen.</strong>
+                You have 5 minutes to reach the counter once your token is called
+                or it will be marked as no-show.
+              </p>
+            </div>
+          </div>
+          <div style="background-color: #002244; padding: 15px; text-align: center;">
+            <p style="color: #aabbcc; margin: 0; font-size: 12px;">
+              iQueue — CIT310 Group 19 — SLTC Research University 2026
+            </p>
+          </div>
+        </div>
+      `,
+    };
 
-module.exports = { sendBookingConfirmation, sendItsYourTurn };
+    await transporter.sendMail(mailOptions);
+    console.log(`Walk-in confirmation sent to ${to}`);
+  } catch (error) {
+    console.error(`Failed to send walk-in confirmation to ${to}:`, error.message);
+  }
+};
+
+module.exports = { sendBookingConfirmation, sendItsYourTurn, sendWalkInConfirmation };
