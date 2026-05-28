@@ -9,17 +9,11 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
-const DUMMY_TOKEN = {
-  tokenNumber: 'CF-007',
-  status: 'CALLABLE',
-  position: 3,
-  estimatedWaitMinutes: 12,
-  nowServing: 'CF-004',
-  branchName: 'Colombo Fort Branch',
-  serviceName: 'Cash Deposit',
-};
+
 
 const STATUS_CONFIG = {
   HELD: {
@@ -77,23 +71,51 @@ const DEMO_STATUSES = ['HELD', 'CALLABLE', 'CALLED', 'SERVED', 'NO_SHOW', 'PRIOR
 const COUNTDOWN_SECONDS = 5 * 60; // 5 minutes
 
 export default function TrackerPage() {
-  const [token, setToken] = useState(DUMMY_TOKEN);
+  const router = useRouter();
+  const [token, setToken] = useState(null);
+  const [position, setPosition] = useState(null);
+  const [nowServing, setNowServing] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
   const [rating, setRating] = useState(0);
   const [rated, setRated] = useState(false);
 
-  const config = STATUS_CONFIG[token.status] || STATUS_CONFIG.CALLABLE;
+  const config = STATUS_CONFIG[token?.status] || STATUS_CONFIG.CALLABLE;
 
-  // Simulate loading
+  const fetchToken = useCallback(async () => {
+    const jwt = localStorage.getItem('iqueue_token');
+    if (!jwt) {
+      router.push('/login');
+      return;
+    }
+    try {
+      setError('');
+      const response = await api.get('/api/tokens/my');
+      setToken(response.data.token);
+      setPosition(response.data.position);
+      setNowServing(response.data.nowServing);
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setError('No active token found. Please book a token first.');
+      } else {
+        setError('Could not load your token. Please refresh.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    fetchToken();
+    // Poll every 10 seconds until Socket.io is ready
+    const interval = setInterval(fetchToken, 10000);
+    return () => clearInterval(interval);
+  }, [fetchToken]);
 
   // Countdown timer for CALLED status
   useEffect(() => {
-    if (token.status !== 'CALLED') {
+    if (token?.status !== 'CALLED') {
       setCountdown(COUNTDOWN_SECONDS);
       return;
     }
@@ -102,7 +124,7 @@ export default function TrackerPage() {
       setCountdown(prev => prev - 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [token.status, countdown]);
+  }, [token?.status, countdown]);
 
   const formatCountdown = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -133,6 +155,20 @@ export default function TrackerPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="bg-white rounded-2xl border border-gray-200 p-8 w-full max-w-md text-center">
+          <p className="text-red-500 font-semibold mb-4">{error}</p>
+          <a href="/booking" className="block w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition">
+            Book a Token
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!token) return null;
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-md mx-auto">
@@ -176,15 +212,15 @@ export default function TrackerPage() {
         {!['SERVED', 'NO_SHOW'].includes(token.status) && (
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
-              <p className="text-2xl font-bold text-blue-900">#{token.position}</p>
+              <p className="text-2xl font-bold text-blue-900">#{position}</p>
               <p className="text-xs text-gray-400 mt-1">Position</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
-              <p className="text-2xl font-bold text-blue-900">{token.estimatedWaitMinutes}</p>
+              <p className="text-2xl font-bold text-blue-900">{position ? (position - 1) * 5 : 0}</p>
               <p className="text-xs text-gray-400 mt-1">Est. mins</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
-              <p className="text-lg font-bold text-blue-900">{token.nowServing}</p>
+              <p className="text-lg font-bold text-blue-900">{nowServing || '--'}</p>
               <p className="text-xs text-gray-400 mt-1">Now serving</p>
             </div>
           </div>
@@ -194,7 +230,7 @@ export default function TrackerPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-gray-400">Branch</span>
-            <span className="text-sm font-medium text-gray-800">{token.branchName}</span>
+            <span className="text-sm font-medium text-gray-800">{token.branchId?.name || '--'}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-400">Service</span>
