@@ -231,5 +231,76 @@ router.patch('/:id/no-show', verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+// POST /api/tokens/walkin — staff books a token for a walk-in customer
+router.post('/walkin', verifyToken, async (req, res) => {
+  try {
+    const { branchId, serviceName, walkInName, walkInEmail, isPriority, priorityReason } = req.body;
+
+    if (!branchId || !serviceName || !walkInName) {
+      return res.status(400).json({
+        success: false,
+        message: 'branchId, serviceName and walkInName are required',
+      });
+    }
+
+    const branch = await Branch.findById(branchId);
+    if (!branch || !branch.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: 'Branch not found or inactive',
+      });
+    }
+
+    // Generate token number
+    const lastToken = await Token.findOne({ branchId }).sort({ createdAt: -1 });
+    const nextNumber = lastToken
+      ? parseInt(lastToken.tokenNumber.split('-')[1]) + 1
+      : 1;
+    const tokenNumber = `CF-${String(nextNumber).padStart(3, '0')}`;
+
+    // Calculate position
+    const position = await Token.countDocuments({
+      branchId,
+      status: { $in: ['CALLABLE', 'HELD', 'PRIORITY'] },
+    }) + 1;
+
+    const status = isPriority ? 'PRIORITY' : 'CALLABLE';
+
+    const token = await Token.create({
+      tokenNumber,
+      branchId,
+      customerId: req.user.id, // staff member's id as placeholder
+      serviceName,
+      status,
+      position,
+      isWalkIn: true,
+      walkInName,
+      walkInEmail: walkInEmail || null,
+      priorityReason: isPriority ? (priorityReason || 'Other') : null,
+    });
+
+    // Send confirmation email if walk-in customer provided an email
+    if (walkInEmail) {
+      const { sendWalkInConfirmation } = require('../services/email.service');
+      await sendWalkInConfirmation({
+        to: walkInEmail,
+        walkInName,
+        tokenNumber,
+        branchName: branch.name,
+        serviceName,
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `Walk-in token booked successfully`,
+      token,
+    });
+
+  } catch (error) {
+    console.error('Walk-in token error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 module.exports = router;

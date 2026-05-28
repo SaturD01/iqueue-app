@@ -26,6 +26,10 @@ const tokenSchema = new mongoose.Schema({
   calledAt: { type: Date, default: null },
   servedAt: { type: Date, default: null },
   serviceTimeMinutes: { type: Number, default: null },
+  isWalkIn: { type: Boolean, default: false },
+  walkInName: { type: String, default: null, trim: true },
+  walkInEmail: { type: String, default: null, trim: true },
+  priorityReason: { type: String, default: null, enum: ['Elderly', 'Disability', 'VIP', 'Pregnant', 'Other', null] },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Token', tokenSchema);
