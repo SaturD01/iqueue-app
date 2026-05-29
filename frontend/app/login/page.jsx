@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,18 +22,25 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
-    // API call will be wired here in Phase 2
-    // For now simulate login
-    setTimeout(() => {
+    try {
+      const response = await api.post('/api/auth/login', {
+        email: form.email,
+        password: form.password,
+      });
+      localStorage.setItem('iqueue_token', response.data.token);
+      localStorage.setItem('iqueue_user', JSON.stringify(response.data.user));
+      const role = response.data.user.role;
+      if (role === 'customer')       router.push('/tracker');
+      else if (role === 'staff')     router.push('/staff');
+      else if (role === 'manager')   router.push('/dashboard');
+      else if (role === 'admin')     router.push('/admin');
+      else                           router.push('/tracker');
+    } catch (err) {
+      const message = err.response?.data?.message || 'Invalid email or password';
+      setError(message);
+    } finally {
       setLoading(false);
-      // Simulate wrong credentials for demo
-      if (form.password === 'wrong') {
-        setError('Invalid email or password');
-      } else {
-        console.log('Login successful:', form.email);
-        // Will redirect based on role in Phase 2
-      }
-    }, 1500);
+    }
   };
 
   return (
