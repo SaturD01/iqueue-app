@@ -1,12 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-
-const BRANCHES = [
-  'Colombo Fort Branch',
-  'Kandy Branch',
-  'Galle Branch',
-];
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import api from '@/lib/api';
 
 const SERVICES = [
   'Cash Deposit',
@@ -18,6 +15,9 @@ const SERVICES = [
 ];
 
 export default function BookingPage() {
+  const router = useRouter();
+  const [branches, setBranches] = useState([]);
+  const [branchError, setBranchError] = useState('');
   const [form, setForm] = useState({
     branch: '',
     service: '',
@@ -28,15 +28,47 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(false);
   const [bookedToken, setBookedToken] = useState(null);
 
+  // Auth guard
+  useEffect(() => {
+    const token = localStorage.getItem('iqueue_token');
+    if (!token) {
+      router.push('/login');
+    }
+  }, []);
+
+  // Fetch real branches
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const response = await api.get('/api/branches');
+        setBranches(response.data.branches || response.data);
+      } catch (err) {
+        setBranchError('Could not load branches. Please refresh the page.');
+      }
+    };
+    fetchBranches();
+  }, []);
+
   const getMinTime = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 15);
-    return now.toISOString().slice(0, 16);
+    const bankOpen = new Date();
+    bankOpen.setHours(8, 30, 0, 0);
+    const earliest = now > bankOpen ? now : bankOpen;
+    const year = earliest.getFullYear();
+    const month = String(earliest.getMonth() + 1).padStart(2, '0');
+    const day = String(earliest.getDate()).padStart(2, '0');
+    const hours = String(earliest.getHours()).padStart(2, '0');
+    const minutes = String(earliest.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   const getMaxTime = () => {
     const now = new Date();
-    return `${now.toISOString().slice(0, 10)}T23:59`;
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}T15:00`;
   };
 
   const validate = () => {
@@ -56,11 +88,22 @@ export default function BookingPage() {
       return;
     }
     setLoading(true);
-    // API call will be wired in Phase 2
-    setTimeout(() => {
+    try {
+      const body = {
+        branchId: form.branch,
+        serviceName: form.service,
+      };
+      if (form.arrivalType === 'later' && form.arrivalTime) {
+        body.arrivalTime = form.arrivalTime;
+      }
+      const response = await api.post('/api/tokens', body);
+      setBookedToken(response.data.token.tokenNumber);
+    } catch (err) {
+      const message = err.response?.data?.message || 'Booking failed. Please try again.';
+      setErrors({ submit: message });
+    } finally {
       setLoading(false);
-      setBookedToken('CF-001');
-    }, 1500);
+    }
   };
 
   if (bookedToken) {
@@ -72,7 +115,6 @@ export default function BookingPage() {
           </div>
           <p className='text-sm text-gray-400 uppercase tracking-widest mb-2'>Your Token</p>
           <p className='text-6xl font-bold text-blue-900 mb-2'>{bookedToken}</p>
-          <p className='text-gray-500 text-sm mb-2'>{form.branch}</p>
           <p className='text-gray-500 text-sm mb-6'>{form.service}</p>
           {form.arrivalType === 'later' && (
             <div className='bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-6 text-sm text-yellow-700'>
@@ -104,19 +146,30 @@ export default function BookingPage() {
         <div className='bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden'>
           <div className='h-1.5 bg-blue-900'></div>
           <div className='p-8'>
-            <h2 className='text-xl font-bold text-gray-800 mb-6'>Book Your Token</h2>
+            <h2 className='text-xl font-bold text-gray-800 mb-1'>Book Your Token</h2>
+            <p className='text-xs text-gray-400 mb-6'>Banking hours: 8:30 AM — 3:00 PM</p>
+
             <form onSubmit={handleSubmit} className='space-y-5'>
+
+              {errors.submit && (
+                <div className='bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl'>
+                  {errors.submit}
+                </div>
+              )}
 
               {/* Branch */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Select Branch</label>
+                {branchError && <p className='text-red-500 text-xs mb-2'>{branchError}</p>}
                 <select
                   value={form.branch}
                   onChange={(e) => { setForm({ ...form, branch: e.target.value }); setErrors({ ...errors, branch: '' }); }}
                   className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.branch ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 >
                   <option value=''>Choose a branch...</option>
-                  {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
+                  {branches.map(b => (
+                    <option key={b._id} value={b._id}>{b.name}</option>
+                  ))}
                 </select>
                 {errors.branch && <p className='text-red-500 text-xs mt-1'>{errors.branch}</p>}
               </div>
