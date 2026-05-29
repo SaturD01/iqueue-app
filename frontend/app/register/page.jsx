@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import api from '@/lib/api';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -48,12 +49,20 @@ export default function RegisterPage() {
       return;
     }
     setLoading(true);
-    // API call will be wired here in Phase 2
-    // For now simulate a successful registration
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await api.post('/api/auth/register', {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+      });
       setSuccess(true);
-    }, 1500);
+    } catch (err) {
+      const message = err.response?.data?.message || 'Registration failed. Please try again.';
+      setErrors({ submit: message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (success) {
@@ -92,13 +101,19 @@ export default function RegisterPage() {
             <h2 className='text-xl font-bold text-gray-800 mb-6'>Create your account</h2>
             <form onSubmit={handleSubmit} className='space-y-4'>
 
+              {errors.submit && (
+                <div className='bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl'>
+                  {errors.submit}
+                </div>
+              )}
+
               {/* Full Name */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Full Name</label>
                 <input
                   type='text' name='name' value={form.name} onChange={handleChange}
                   placeholder='Nimali Fernando'
-                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-gray-900 outline-none transition ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 />
                 {errors.name && <p className='text-red-500 text-xs mt-1'>{errors.name}</p>}
               </div>
@@ -109,7 +124,7 @@ export default function RegisterPage() {
                 <input
                   type='email' name='email' value={form.email} onChange={handleChange}
                   placeholder='nimali@gmail.com'
-                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-gray-900 outline-none transition ${errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 />
                 {errors.email && <p className='text-red-500 text-xs mt-1'>{errors.email}</p>}
               </div>
@@ -120,7 +135,7 @@ export default function RegisterPage() {
                 <input
                   type='text' name='phone' value={form.phone} onChange={handleChange}
                   placeholder='0771234567'
-                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-gray-900 outline-none transition ${errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 />
                 {errors.phone && <p className='text-red-500 text-xs mt-1'>{errors.phone}</p>}
               </div>
@@ -131,7 +146,7 @@ export default function RegisterPage() {
                 <input
                   type='password' name='password' value={form.password} onChange={handleChange}
                   placeholder='Minimum 8 characters'
-                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-gray-900 outline-none transition ${errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 />
                 {errors.password && <p className='text-red-500 text-xs mt-1'>{errors.password}</p>}
               </div>
@@ -142,7 +157,7 @@ export default function RegisterPage() {
                 <input
                   type='password' name='confirmPassword' value={form.confirmPassword} onChange={handleChange}
                   placeholder='Re-enter your password'
-                  className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.confirmPassword ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
+                  className={`w-full px-4 py-3 rounded-xl border text-sm text-gray-900 outline-none transition ${errors.confirmPassword ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 />
                 {errors.confirmPassword && <p className='text-red-500 text-xs mt-1'>{errors.confirmPassword}</p>}
               </div>
