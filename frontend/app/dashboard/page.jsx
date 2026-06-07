@@ -1,42 +1,79 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-const SUMMARY = { totalServed: 47, totalNoShows: 3, avgServiceTimeMinutes: 6.2 };
-
-const HOURLY_DATA = [
-  { hour: '8am', served: 5 }, { hour: '9am', served: 12 },
-  { hour: '10am', served: 18 }, { hour: '11am', served: 22 },
-  { hour: '12pm', served: 9 }, { hour: '1pm', served: 14 },
-  { hour: '2pm', served: 19 }, { hour: '3pm', served: 11 },
-  { hour: '4pm', served: 7 }, { hour: '5pm', served: 3 },
-];
-
-const TREND_DATA = [
-  { date: 'Mon', served: 82 }, { date: 'Tue', served: 91 },
-  { date: 'Wed', served: 78 }, { date: 'Thu', served: 95 },
-  { date: 'Fri', served: 88 }, { date: 'Sat', served: 62 },
-  { date: 'Sun', served: 47 },
-];
+import api from '@/lib/api';
 
 export default function ManagerDashboardPage() {
+  const router = useRouter();
+  const [summary, setSummary] = useState(null);
+  const [hourlyData, setHourlyData] = useState([]);
   const [aiAnalysis, setAiAnalysis] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
+  const [loadingAi, setLoadingAi] = useState(false);
+  const [fetchError, setFetchError] = useState('');
 
-  const handleAiAnalysis = () => {
-    setAiLoading(true);
-    // Real API call will be wired in Phase 2
-    setTimeout(() => {
-      setAiLoading(false);
-      setAiAnalysis(
-        'Peak hours: 10am-12pm and 2pm-3pm. Recommended tellers: 4 during peak hours (10am-12pm and 2pm-3pm), ' +
-        '2 during normal hours (9am, 12pm-2pm, 3pm-5pm), 1 during off-peak (8am, 5pm). ' +
-        'No-show rate is 6.4% which is within acceptable range. ' +
-        'Consider sending reminder notifications to customers 3 positions before their turn.'
-      );
-    }, 2000);
+  // Auth guard — manager/admin only
+  useEffect(() => {
+    const token = localStorage.getItem('iqueue_token');
+    if (!token) { router.push('/login'); return; }
+    const user = JSON.parse(localStorage.getItem('iqueue_user') || '{}');
+    if (user.role !== 'manager' && user.role !== 'admin') {
+      router.push('/login');
+    }
+  }, []);
+
+  // Fetch analytics on page load
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setLoadingData(true);
+      setFetchError('');
+      try {
+        const [summaryRes, hourlyRes] = await Promise.all([
+          api.get('/api/analytics/summary'),
+          api.get('/api/analytics/hourly'),
+        ]);
+        setSummary(summaryRes.data);
+        setHourlyData(hourlyRes.data.hourly || []);
+      } catch (err) {
+        setFetchError('Could not load analytics. Please refresh.');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    fetchAnalytics();
+  }, []);
+
+  const handleAiAnalysis = async () => {
+    setLoadingAi(true);
+    setAiAnalysis('');
+    try {
+      const res = await api.get('/api/analytics/summary');
+      const stats = res.data;
+      const aiRes = await api.post('/api/admin/ai-recommendation', {
+        servedCount: stats.servedCount || 0,
+        avgWaitMinutes: stats.avgWaitMinutes || 0,
+        noShowCount: stats.noShowCount || 0,
+      });
+      setAiAnalysis(aiRes.data.recommendation);
+    } catch (err) {
+      setAiAnalysis('AI analysis unavailable right now. Please try again later.');
+    } finally {
+      setLoadingAi(false);
+    }
   };
+
+  if (loadingData) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+        <div className='text-center'>
+          <div className='w-10 h-10 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-gray-400 text-sm'>Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-gray-50'>
@@ -47,50 +84,51 @@ export default function ManagerDashboardPage() {
         <p className='text-blue-300 text-sm'>Branch Analytics Dashboard</p>
       </div>
 
+      {fetchError && (
+        <div className='bg-red-50 border-b border-red-200 text-red-600 text-sm px-6 py-3'>
+          {fetchError}
+        </div>
+      )}
+
       <div className='p-6 max-w-5xl mx-auto'>
 
         {/* Stat cards */}
         <div className='grid grid-cols-3 gap-4 mb-6'>
           <div className='bg-white rounded-2xl border border-gray-200 p-5'>
             <p className='text-xs text-gray-400 uppercase tracking-wide mb-1'>Customers Served Today</p>
-            <p className='text-4xl font-bold text-blue-900'>{SUMMARY.totalServed}</p>
+            <p className='text-4xl font-bold text-blue-900'>{summary?.servedCount ?? '--'}</p>
           </div>
           <div className='bg-white rounded-2xl border border-gray-200 p-5'>
             <p className='text-xs text-gray-400 uppercase tracking-wide mb-1'>No-Shows Today</p>
-            <p className='text-4xl font-bold text-red-600'>{SUMMARY.totalNoShows}</p>
+            <p className='text-4xl font-bold text-red-600'>{summary?.noShowCount ?? '--'}</p>
           </div>
           <div className='bg-white rounded-2xl border border-gray-200 p-5'>
-            <p className='text-xs text-gray-400 uppercase tracking-wide mb-1'>Avg Service Time</p>
-            <p className='text-4xl font-bold text-green-700'>{SUMMARY.avgServiceTimeMinutes}<span className='text-lg font-normal text-gray-400 ml-1'>min</span></p>
+            <p className='text-xs text-gray-400 uppercase tracking-wide mb-1'>Avg Wait Time</p>
+            <p className='text-4xl font-bold text-green-700'>
+              {summary?.avgWaitMinutes ?? '--'}
+              <span className='text-lg font-normal text-gray-400 ml-1'>min</span>
+            </p>
           </div>
         </div>
 
         {/* Bar chart */}
         <div className='bg-white rounded-2xl border border-gray-200 p-6 mb-6'>
           <h3 className='text-sm font-semibold text-gray-700 mb-4'>Customers Per Hour — Today</h3>
-          <ResponsiveContainer width='100%' height={220}>
-            <BarChart data={HOURLY_DATA}>
-              <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
-              <XAxis dataKey='hour' tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey='served' fill='#002244' radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Line chart */}
-        <div className='bg-white rounded-2xl border border-gray-200 p-6 mb-6'>
-          <h3 className='text-sm font-semibold text-gray-700 mb-4'>7-Day Served Count Trend</h3>
-          <ResponsiveContainer width='100%' height={200}>
-            <LineChart data={TREND_DATA}>
-              <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
-              <XAxis dataKey='date' tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Line type='monotone' dataKey='served' stroke='#002244' strokeWidth={2} dot={{ fill: '#002244', r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          {hourlyData.length === 0 ? (
+            <div className='flex items-center justify-center h-48 text-gray-400 text-sm'>
+              No hourly data available yet for today.
+            </div>
+          ) : (
+            <ResponsiveContainer width='100%' height={220}>
+              <BarChart data={hourlyData}>
+                <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
+                <XAxis dataKey='hour' tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey='served' fill='#002244' radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* AI Analysis */}
@@ -98,11 +136,13 @@ export default function ManagerDashboardPage() {
           <h3 className='text-sm font-semibold text-gray-700 mb-4'>AI Staffing Analysis</h3>
           <button
             onClick={handleAiAnalysis}
-            disabled={aiLoading}
+            disabled={loadingAi}
             className='w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2'
           >
-            {aiLoading && <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>}
-            {aiLoading ? 'Analysing...' : 'Run AI Analysis'}
+            {loadingAi && (
+              <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>
+            )}
+            {loadingAi ? 'Analysing...' : 'Run AI Analysis'}
           </button>
           <div className={`mt-4 rounded-xl p-4 text-sm ${aiAnalysis ? 'bg-blue-50 border border-blue-200 text-blue-900' : 'bg-gray-50 border border-gray-200 text-gray-400'}`}>
             {aiAnalysis || 'AI analysis will appear here after you click Run AI Analysis.'}
