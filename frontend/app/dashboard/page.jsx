@@ -35,7 +35,7 @@ export default function ManagerDashboardPage() {
           api.get('/api/analytics/hourly'),
         ]);
         setSummary(summaryRes.data);
-        setHourlyData(hourlyRes.data);
+        setHourlyData(hourlyRes.data.hourly || []);
       } catch (err) {
         setFetchError('Could not load analytics. Please refresh.');
       } finally {
@@ -125,7 +125,7 @@ export default function ManagerDashboardPage() {
                 <XAxis dataKey='hour' tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip />
-                <Bar dataKey='servedCount' fill='#002244' radius={[4, 4, 0, 0]} />
+                <Bar dataKey='served' fill='#002244' radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
