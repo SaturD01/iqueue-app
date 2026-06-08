@@ -1,14 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-
-const DUMMY_TOKENS = [
-  { id: 1, tokenNumber: 'CF-001', name: 'Nimali Fernando', service: 'Cash Deposit', status: 'CALLABLE', noShowRisk: 'NONE' },
-  { id: 2, tokenNumber: 'CF-002', name: 'Roshan Perera', service: 'Loan Inquiry', status: 'HELD', noShowRisk: 'HIGH' },
-  { id: 3, tokenNumber: 'CF-003', name: 'Ashan Silva', service: 'Card Services', status: 'CALLABLE', noShowRisk: 'MEDIUM' },
-  { id: 4, tokenNumber: 'CF-004', name: 'Dilshan Jayawardena', service: 'Account Opening', status: 'PRIORITY', noShowRisk: 'NONE' },
-  { id: 5, tokenNumber: 'CF-005', name: 'Sanduni Rathnayake', service: 'General Inquiry', status: 'CALLED', noShowRisk: 'LOW' },
-];
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 const STATUS_BADGE = {
   CALLABLE: 'bg-green-100 text-green-800',
@@ -19,36 +13,88 @@ const STATUS_BADGE = {
   NO_SHOW: 'bg-red-100 text-red-800',
 };
 
-const RISK_BADGE = {
-  HIGH: 'bg-red-100 text-red-700 border border-red-300',
-  MEDIUM: 'bg-orange-100 text-orange-700 border border-orange-300',
-  LOW: 'bg-yellow-50 text-yellow-600 border border-yellow-200',
-  NONE: '',
-};
-
 export default function StaffPanelPage() {
-  const [tokens, setTokens] = useState(DUMMY_TOKENS);
+  const router = useRouter();
+  const [queue, setQueue] = useState([]);
   const [calledToken, setCalledToken] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [branchId, setBranchId] = useState('');
 
-  const handleCallNext = () => {
-    const next = tokens.find(t => t.status === 'PRIORITY' || t.status === 'CALLABLE');
-    if (!next) { alert('No callable tokens in the queue'); return; }
-    setTokens(prev => prev.map(t =>
-      t.id === next.id ? { ...t, status: 'CALLED' } : t
-    ));
-    setCalledToken(next.tokenNumber);
-    setTimeout(() => setCalledToken(null), 3000);
+  // Auth guard — staff only
+  useEffect(() => {
+    const token = localStorage.getItem('iqueue_token');
+    if (!token) { router.push('/login'); return; }
+    const user = JSON.parse(localStorage.getItem('iqueue_user') || '{}');
+    if (user.role !== 'staff') { router.push('/login'); return; }
+    if (user.branchId) setBranchId(user.branchId);
+  }, []);
+
+  // Fetch queue
+  const fetchQueue = useCallback(async () => {
+    if (!branchId) return;
+    try {
+      setFetchError('');
+      const response = await api.get(`/api/tokens/queue?branchId=${branchId}`);
+      setQueue(response.data.tokens || []);
+    } catch (err) {
+      setFetchError('Could not load queue. Please refresh.');
+    }
+  }, [branchId]);
+
+  useEffect(() => {
+    if (!branchId) return;
+    fetchQueue();
+    const interval = setInterval(fetchQueue, 10000);
+    return () => clearInterval(interval);
+  }, [fetchQueue, branchId]);
+
+  const handleCallNext = async () => {
+    setLoading(true);
+    setActionError('');
+    try {
+      const response = await api.post('/api/tokens/call-next', { branchId });
+      setCalledToken(response.data.token);
+      await fetchQueue();
+    } catch (err) {
+      setActionError(err.response?.data?.message || 'No tokens to call.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleServed = (id) => {
-    setTokens(prev => prev.filter(t => t.id !== id));
+  const handleServed = async (tokenId) => {
+    setLoading(true);
+    setActionError('');
+    try {
+      await api.patch(`/api/tokens/${tokenId}/served`);
+      setCalledToken(null);
+      await fetchQueue();
+    } catch (err) {
+      setActionError('Could not mark as served. Try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleNoShow = (id) => {
-    setTokens(prev => prev.filter(t => t.id !== id));
+  const handleNoShow = async (tokenId) => {
+    setLoading(true);
+    setActionError('');
+    try {
+      await api.patch(`/api/tokens/${tokenId}/no-show`);
+      setCalledToken(null);
+      await fetchQueue();
+    } catch (err) {
+      setActionError('Could not mark as no-show. Try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const activeTokens = tokens.filter(t => !['SERVED', 'NO_SHOW'].includes(t.status));
+  const activeTokens = queue.filter(t =>
+    !['SERVED', 'NO_SHOW'].includes(t.status)
+  );
 
   return (
     <div className='min-h-screen bg-gray-50'>
@@ -66,9 +112,10 @@ export default function StaffPanelPage() {
           </div>
           <button
             onClick={handleCallNext}
-            className='bg-white text-blue-900 px-5 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition'
+            disabled={loading}
+            className='bg-white text-blue-900 px-5 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition disabled:opacity-60'
           >
-            Call Next
+            {loading ? 'Loading...' : 'Call Next'}
           </button>
         </div>
       </div>
@@ -76,7 +123,35 @@ export default function StaffPanelPage() {
       {/* Called notification */}
       {calledToken && (
         <div className='bg-green-500 text-white text-center py-3 font-semibold'>
-          Now calling: {calledToken}
+          Now calling: {calledToken.tokenNumber} — {calledToken.serviceName}
+          <div className='flex justify-center gap-3 mt-2'>
+            <button
+              onClick={() => handleServed(calledToken._id)}
+              disabled={loading}
+              className='bg-white text-green-700 px-4 py-1 rounded-lg text-sm font-semibold hover:bg-green-50 transition disabled:opacity-60'
+            >
+              Served
+            </button>
+            <button
+              onClick={() => handleNoShow(calledToken._id)}
+              disabled={loading}
+              className='bg-green-700 text-white px-4 py-1 rounded-lg text-sm font-semibold hover:bg-green-800 transition disabled:opacity-60'
+            >
+              No Show
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Errors */}
+      {fetchError && (
+        <div className='bg-red-50 border-b border-red-200 text-red-600 text-sm px-6 py-3'>
+          {fetchError}
+        </div>
+      )}
+      {actionError && (
+        <div className='bg-orange-50 border-b border-orange-200 text-orange-600 text-sm px-6 py-3'>
+          {actionError}
         </div>
       )}
 
@@ -89,11 +164,15 @@ export default function StaffPanelPage() {
             <p className='text-xs text-gray-400 mt-1'>In Queue</p>
           </div>
           <div className='bg-white rounded-xl border border-gray-200 p-4 text-center'>
-            <p className='text-2xl font-bold text-green-700'>{tokens.filter(t => t.status === 'CALLABLE').length}</p>
+            <p className='text-2xl font-bold text-green-700'>
+              {queue.filter(t => t.status === 'CALLABLE').length}
+            </p>
             <p className='text-xs text-gray-400 mt-1'>Callable</p>
           </div>
           <div className='bg-white rounded-xl border border-gray-200 p-4 text-center'>
-            <p className='text-2xl font-bold text-purple-700'>{tokens.filter(t => t.status === 'PRIORITY').length}</p>
+            <p className='text-2xl font-bold text-purple-700'>
+              {queue.filter(t => t.status === 'PRIORITY').length}
+            </p>
             <p className='text-xs text-gray-400 mt-1'>Priority</p>
           </div>
         </div>
@@ -110,24 +189,24 @@ export default function StaffPanelPage() {
               <thead>
                 <tr className='bg-gray-50 border-b border-gray-200'>
                   <th className='text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase'>Token</th>
-                  <th className='text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase'>Customer</th>
                   <th className='text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase'>Service</th>
                   <th className='text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase'>Status</th>
-                  <th className='text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase'>Risk</th>
                   <th className='text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase'>Actions</th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-gray-100'>
                 {activeTokens.map(token => (
-                  <tr key={token.id} className='hover:bg-gray-50 transition'>
+                  <tr key={token._id} className='hover:bg-gray-50 transition'>
                     <td className='px-4 py-4'>
                       <span className='font-bold text-blue-900'>{token.tokenNumber}</span>
+                      {token.isWalkIn && (
+                        <span className='ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full'>
+                          Walk-in
+                        </span>
+                      )}
                     </td>
                     <td className='px-4 py-4'>
-                      <span className='text-sm text-gray-700'>{token.name}</span>
-                    </td>
-                    <td className='px-4 py-4'>
-                      <span className='text-sm text-gray-500'>{token.service}</span>
+                      <span className='text-sm text-gray-500'>{token.serviceName}</span>
                     </td>
                     <td className='px-4 py-4'>
                       <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_BADGE[token.status] || ''}`}>
@@ -135,23 +214,18 @@ export default function StaffPanelPage() {
                       </span>
                     </td>
                     <td className='px-4 py-4'>
-                      {token.noShowRisk !== 'NONE' && (
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${RISK_BADGE[token.noShowRisk]}`}>
-                          {token.noShowRisk}
-                        </span>
-                      )}
-                    </td>
-                    <td className='px-4 py-4'>
                       <div className='flex gap-2'>
                         <button
-                          onClick={() => handleServed(token.id)}
-                          className='bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition'
+                          onClick={() => handleServed(token._id)}
+                          disabled={loading}
+                          className='bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition disabled:opacity-60'
                         >
                           Served
                         </button>
                         <button
-                          onClick={() => handleNoShow(token.id)}
-                          className='bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-600 transition'
+                          onClick={() => handleNoShow(token._id)}
+                          disabled={loading}
+                          className='bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-600 transition disabled:opacity-60'
                         >
                           No-Show
                         </button>
