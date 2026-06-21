@@ -20,6 +20,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const http = require('http');
+const socketService = require('./services/socket.service');
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ connectDB();
 
 const app = express();
 const server = http.createServer(app);
+socketService.init(server);
 
 // Middleware
 app.use(cors({
