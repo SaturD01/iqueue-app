@@ -100,11 +100,12 @@ router.post('/login', async (req, res) => {
       message: 'Login successful',
       token,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  branchId: user.branchId || null,
+}
     });
 
   } catch (error) {
