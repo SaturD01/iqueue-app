@@ -108,10 +108,35 @@ export default function TrackerPage() {
 
   useEffect(() => {
     fetchToken();
-    // Poll every 10 seconds until Socket.io is ready
-    const interval = setInterval(fetchToken, 10000);
-    return () => clearInterval(interval);
   }, [fetchToken]);
+
+  // Socket.io real-time updates
+  useEffect(() => {
+    const jwt = localStorage.getItem('iqueue_token');
+    if (!jwt) return;
+
+    const { io } = require('socket.io-client');
+    const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+
+    const user = JSON.parse(localStorage.getItem('iqueue_user') || '{}');
+    if (user.branchId) {
+      socket.emit('join:branch', user.branchId);
+    } else if (token?.branchId?._id) {
+      socket.emit('join:branch', token.branchId._id);
+    }
+
+    socket.on('token:called', ({ token: calledToken }) => {
+      if (token && calledToken._id === token._id) {
+        fetchToken();
+      }
+    });
+
+    socket.on('queue:updated', () => {
+      fetchToken();
+    });
+
+    return () => socket.disconnect();
+  }, [token, fetchToken]);
 
   // Countdown timer for CALLED status
   useEffect(() => {
