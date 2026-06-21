@@ -13,6 +13,13 @@ const STATUS_BADGE = {
   NO_SHOW: 'bg-red-100 text-red-800',
 };
 
+const PRIORITY_REASONS = ['Elderly', 'Disability', 'VIP', 'Pregnant', 'Other'];
+
+const SERVICES = [
+  'Cash Deposit', 'Account Opening', 'Card Services',
+  'Loan Inquiry', 'Document Submission', 'General Inquiry',
+];
+
 export default function StaffPanelPage() {
   const router = useRouter();
   const [queue, setQueue] = useState([]);
@@ -21,14 +28,28 @@ export default function StaffPanelPage() {
   const [fetchError, setFetchError] = useState('');
   const [actionError, setActionError] = useState('');
   const [branchId, setBranchId] = useState('');
+  const [branchName, setBranchName] = useState('');
 
-  // Auth guard — staff only
+  // Walk-in form state
+  const [showWalkIn, setShowWalkIn] = useState(false);
+  const [walkInForm, setWalkInForm] = useState({
+    walkInName: '', serviceName: '', walkInEmail: '',
+    isPriority: false, priorityReason: '',
+  });
+  const [walkInLoading, setWalkInLoading] = useState(false);
+  const [walkInError, setWalkInError] = useState('');
+  const [printSlip, setPrintSlip] = useState(null);
+
+  // Auth guard
   useEffect(() => {
     const token = localStorage.getItem('iqueue_token');
     if (!token) { router.push('/login'); return; }
     const user = JSON.parse(localStorage.getItem('iqueue_user') || '{}');
     if (user.role !== 'staff') { router.push('/login'); return; }
-    if (user.branchId) setBranchId(user.branchId);
+    if (user.branchId) {
+      setBranchId(user.branchId);
+      setBranchName(user.branchName || 'Your Branch');
+    }
   }, []);
 
   // Fetch queue
@@ -51,53 +72,93 @@ export default function StaffPanelPage() {
   }, [fetchQueue, branchId]);
 
   const handleCallNext = async () => {
-    setLoading(true);
-    setActionError('');
+    setLoading(true); setActionError('');
     try {
       const response = await api.post('/api/tokens/call-next', { branchId });
       setCalledToken(response.data.token);
       await fetchQueue();
     } catch (err) {
       setActionError(err.response?.data?.message || 'No tokens to call.');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const handleServed = async (tokenId) => {
-    setLoading(true);
-    setActionError('');
+    setLoading(true); setActionError('');
     try {
       await api.patch(`/api/tokens/${tokenId}/served`);
-      setCalledToken(null);
-      await fetchQueue();
+      setCalledToken(null); await fetchQueue();
     } catch (err) {
-      setActionError('Could not mark as served. Try again.');
-    } finally {
-      setLoading(false);
-    }
+      setActionError('Could not mark as served.');
+    } finally { setLoading(false); }
   };
 
   const handleNoShow = async (tokenId) => {
-    setLoading(true);
-    setActionError('');
+    setLoading(true); setActionError('');
     try {
       await api.patch(`/api/tokens/${tokenId}/no-show`);
-      setCalledToken(null);
-      await fetchQueue();
+      setCalledToken(null); await fetchQueue();
     } catch (err) {
-      setActionError('Could not mark as no-show. Try again.');
-    } finally {
-      setLoading(false);
-    }
+      setActionError('Could not mark as no-show.');
+    } finally { setLoading(false); }
   };
 
-  const activeTokens = queue.filter(t =>
-    !['SERVED', 'NO_SHOW'].includes(t.status)
-  );
+  const handleWalkInSubmit = async () => {
+    if (!walkInForm.walkInName || !walkInForm.serviceName) {
+      setWalkInError('Customer name and service are required.');
+      return;
+    }
+    setWalkInLoading(true); setWalkInError('');
+    try {
+      const body = {
+        branchId,
+        walkInName: walkInForm.walkInName,
+        serviceName: walkInForm.serviceName,
+        isPriority: walkInForm.isPriority,
+        priorityReason: walkInForm.isPriority ? walkInForm.priorityReason : undefined,
+      };
+      if (walkInForm.walkInEmail) body.walkInEmail = walkInForm.walkInEmail;
+      const response = await api.post('/api/tokens/walkin', body);
+      setPrintSlip(response.data.token);
+      setShowWalkIn(false);
+      setWalkInForm({ walkInName: '', serviceName: '', walkInEmail: '', isPriority: false, priorityReason: '' });
+      await fetchQueue();
+    } catch (err) {
+      setWalkInError(err.response?.data?.message || 'Walk-in booking failed.');
+    } finally { setWalkInLoading(false); }
+  };
+
+  const handlePrint = () => window.print();
+
+  const activeTokens = queue.filter(t => !['SERVED', 'NO_SHOW'].includes(t.status));
 
   return (
     <div className='min-h-screen bg-gray-50'>
+
+      {/* Print slip — only visible when printing */}
+      {printSlip && (
+        <div className='print-only fixed inset-0 bg-white z-50 flex items-center justify-center'
+             style={{ display: 'none' }}>
+          <div style={{ fontFamily: 'Arial', textAlign: 'center', padding: '40px', border: '2px solid #1F4E79', borderRadius: '12px', maxWidth: '320px' }}>
+            <h1 style={{ color: '#1F4E79', fontSize: '28px', margin: '0 0 8px' }}>iQueue</h1>
+            <p style={{ color: '#888', fontSize: '12px', margin: '0 0 24px' }}>Smart Bank Queue Management</p>
+            <p style={{ color: '#555', fontSize: '14px', margin: '0 0 8px' }}>Your Token Number</p>
+            <p style={{ color: '#1F4E79', fontSize: '72px', fontWeight: '900', margin: '0 0 8px', fontFamily: 'monospace' }}>{printSlip.tokenNumber}</p>
+            <p style={{ color: '#555', fontSize: '14px', margin: '0 0 4px' }}>{printSlip.serviceName}</p>
+            {printSlip.isWalkIn && printSlip.priorityReason && (
+              <p style={{ color: '#5B21B6', fontSize: '12px', margin: '0 0 16px' }}>Priority: {printSlip.priorityReason}</p>
+            )}
+            <p style={{ color: '#333', fontSize: '13px', marginTop: '16px', borderTop: '1px solid #ddd', paddingTop: '16px' }}>
+              Please watch the display screen.
+            </p>
+            <p style={{ color: '#333', fontSize: '13px' }}>
+              You have 5 minutes to reach the counter when called.
+            </p>
+            <p style={{ color: '#888', fontSize: '11px', marginTop: '16px' }}>
+              {new Date().toLocaleString('en-LK')}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className='bg-blue-900 text-white px-6 py-4 flex items-center justify-between'>
@@ -106,10 +167,12 @@ export default function StaffPanelPage() {
           <p className='text-blue-300 text-sm'>Staff Queue Panel</p>
         </div>
         <div className='flex items-center gap-3'>
-          <div className='flex items-center gap-2 text-sm text-blue-200'>
-            <span className='w-2 h-2 bg-green-400 rounded-full animate-pulse'></span>
-            <span>Live</span>
-          </div>
+          <button
+            onClick={() => { setShowWalkIn(true); setPrintSlip(null); }}
+            className='bg-orange-500 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-orange-600 transition'
+          >
+            + Walk-in
+          </button>
           <button
             onClick={handleCallNext}
             disabled={loading}
@@ -125,54 +188,56 @@ export default function StaffPanelPage() {
         <div className='bg-green-500 text-white text-center py-3 font-semibold'>
           Now calling: {calledToken.tokenNumber} — {calledToken.serviceName}
           <div className='flex justify-center gap-3 mt-2'>
-            <button
-              onClick={() => handleServed(calledToken._id)}
-              disabled={loading}
-              className='bg-white text-green-700 px-4 py-1 rounded-lg text-sm font-semibold hover:bg-green-50 transition disabled:opacity-60'
-            >
+            <button onClick={() => handleServed(calledToken._id)} disabled={loading}
+              className='bg-white text-green-700 px-4 py-1 rounded-lg text-sm font-semibold hover:bg-green-50 transition disabled:opacity-60'>
               Served
             </button>
-            <button
-              onClick={() => handleNoShow(calledToken._id)}
-              disabled={loading}
-              className='bg-green-700 text-white px-4 py-1 rounded-lg text-sm font-semibold hover:bg-green-800 transition disabled:opacity-60'
-            >
+            <button onClick={() => handleNoShow(calledToken._id)} disabled={loading}
+              className='bg-green-700 text-white px-4 py-1 rounded-lg text-sm font-semibold hover:bg-green-800 transition disabled:opacity-60'>
               No Show
             </button>
           </div>
         </div>
       )}
 
-      {/* Errors */}
-      {fetchError && (
-        <div className='bg-red-50 border-b border-red-200 text-red-600 text-sm px-6 py-3'>
-          {fetchError}
+      {/* Print slip success banner */}
+      {printSlip && (
+        <div className='bg-orange-50 border-b border-orange-200 px-6 py-3 flex items-center justify-between'>
+          <div>
+            <p className='text-orange-800 font-semibold text-sm'>Walk-in token booked: {printSlip.tokenNumber}</p>
+            <p className='text-orange-600 text-xs'>
+              {printSlip.walkInEmail ? 'Confirmation email sent to customer.' : 'Print the slip and hand it to the customer.'}
+            </p>
+          </div>
+          <div className='flex gap-2'>
+            <button onClick={handlePrint}
+              className='bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange-600 transition'>
+              Print Slip
+            </button>
+            <button onClick={() => setPrintSlip(null)}
+              className='bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-300 transition'>
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
-      {actionError && (
-        <div className='bg-orange-50 border-b border-orange-200 text-orange-600 text-sm px-6 py-3'>
-          {actionError}
-        </div>
-      )}
+
+      {fetchError && <div className='bg-red-50 border-b border-red-200 text-red-600 text-sm px-6 py-3'>{fetchError}</div>}
+      {actionError && <div className='bg-orange-50 border-b border-orange-200 text-orange-600 text-sm px-6 py-3'>{actionError}</div>}
 
       <div className='p-6'>
-
-        {/* Stats bar */}
+        {/* Stats */}
         <div className='grid grid-cols-3 gap-4 mb-6'>
           <div className='bg-white rounded-xl border border-gray-200 p-4 text-center'>
             <p className='text-2xl font-bold text-blue-900'>{activeTokens.length}</p>
             <p className='text-xs text-gray-400 mt-1'>In Queue</p>
           </div>
           <div className='bg-white rounded-xl border border-gray-200 p-4 text-center'>
-            <p className='text-2xl font-bold text-green-700'>
-              {queue.filter(t => t.status === 'CALLABLE').length}
-            </p>
+            <p className='text-2xl font-bold text-green-700'>{queue.filter(t => t.status === 'CALLABLE').length}</p>
             <p className='text-xs text-gray-400 mt-1'>Callable</p>
           </div>
           <div className='bg-white rounded-xl border border-gray-200 p-4 text-center'>
-            <p className='text-2xl font-bold text-purple-700'>
-              {queue.filter(t => t.status === 'PRIORITY').length}
-            </p>
+            <p className='text-2xl font-bold text-purple-700'>{queue.filter(t => t.status === 'PRIORITY').length}</p>
             <p className='text-xs text-gray-400 mt-1'>Priority</p>
           </div>
         </div>
@@ -199,34 +264,20 @@ export default function StaffPanelPage() {
                   <tr key={token._id} className='hover:bg-gray-50 transition'>
                     <td className='px-4 py-4'>
                       <span className='font-bold text-blue-900'>{token.tokenNumber}</span>
-                      {token.isWalkIn && (
-                        <span className='ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full'>
-                          Walk-in
-                        </span>
-                      )}
+                      {token.isWalkIn && <span className='ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full'>Walk-in</span>}
                     </td>
+                    <td className='px-4 py-4'><span className='text-sm text-gray-500'>{token.serviceName}</span></td>
                     <td className='px-4 py-4'>
-                      <span className='text-sm text-gray-500'>{token.serviceName}</span>
-                    </td>
-                    <td className='px-4 py-4'>
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_BADGE[token.status] || ''}`}>
-                        {token.status}
-                      </span>
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_BADGE[token.status] || ''}`}>{token.status}</span>
                     </td>
                     <td className='px-4 py-4'>
                       <div className='flex gap-2'>
-                        <button
-                          onClick={() => handleServed(token._id)}
-                          disabled={loading}
-                          className='bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition disabled:opacity-60'
-                        >
+                        <button onClick={() => handleServed(token._id)} disabled={loading}
+                          className='bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition disabled:opacity-60'>
                           Served
                         </button>
-                        <button
-                          onClick={() => handleNoShow(token._id)}
-                          disabled={loading}
-                          className='bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-600 transition disabled:opacity-60'
-                        >
+                        <button onClick={() => handleNoShow(token._id)} disabled={loading}
+                          className='bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-600 transition disabled:opacity-60'>
                           No-Show
                         </button>
                       </div>
@@ -238,6 +289,88 @@ export default function StaffPanelPage() {
           </div>
         )}
       </div>
+
+      {/* Walk-in Modal */}
+      {showWalkIn && (
+        <div className='fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center px-4 z-50'>
+          <div className='bg-white rounded-2xl shadow-xl w-full max-w-md p-6'>
+            <h2 className='text-lg font-bold text-gray-800 mb-1'>Walk-in Customer</h2>
+            <p className='text-sm text-gray-400 mb-6'>Book a token for a customer who walked in</p>
+
+            <div className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>Customer Name *</label>
+                <input type='text' value={walkInForm.walkInName}
+                  onChange={e => setWalkInForm({...walkInForm, walkInName: e.target.value})}
+                  placeholder='e.g. Somawathie Perera'
+                  className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 transition'
+                />
+              </div>
+
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>Service Type *</label>
+                <select value={walkInForm.serviceName}
+                  onChange={e => setWalkInForm({...walkInForm, serviceName: e.target.value})}
+                  className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 transition'
+                >
+                  <option value=''>Choose a service...</option>
+                  {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                  Customer Email <span className='text-gray-400 font-normal'>(optional — for confirmation email)</span>
+                </label>
+                <input type='email' value={walkInForm.walkInEmail}
+                  onChange={e => setWalkInForm({...walkInForm, walkInEmail: e.target.value})}
+                  placeholder='customer@gmail.com'
+                  className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 transition'
+                />
+              </div>
+
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>Priority Token</label>
+                <div className='flex gap-2 mb-3'>
+                  <button type='button'
+                    onClick={() => setWalkInForm({...walkInForm, isPriority: false, priorityReason: ''})}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition ${!walkInForm.isPriority ? 'bg-blue-900 text-white border-blue-900' : 'bg-white text-gray-600 border-gray-200'}`}>
+                    Normal
+                  </button>
+                  <button type='button'
+                    onClick={() => setWalkInForm({...walkInForm, isPriority: true})}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition ${walkInForm.isPriority ? 'bg-purple-700 text-white border-purple-700' : 'bg-white text-gray-600 border-gray-200'}`}>
+                    Priority
+                  </button>
+                </div>
+                {walkInForm.isPriority && (
+                  <select value={walkInForm.priorityReason}
+                    onChange={e => setWalkInForm({...walkInForm, priorityReason: e.target.value})}
+                    className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-purple-400 transition'
+                  >
+                    <option value=''>Select reason...</option>
+                    {PRIORITY_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                )}
+              </div>
+            </div>
+
+            {walkInError && <p className='text-red-500 text-sm mt-4'>{walkInError}</p>}
+
+            <div className='flex gap-3 mt-6'>
+              <button onClick={() => { setShowWalkIn(false); setWalkInError(''); }}
+                className='flex-1 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition'>
+                Cancel
+              </button>
+              <button onClick={handleWalkInSubmit} disabled={walkInLoading}
+                className='flex-1 py-3 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition disabled:opacity-60 flex items-center justify-center gap-2'>
+                {walkInLoading && <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>}
+                {walkInLoading ? 'Booking...' : 'Book Token'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
