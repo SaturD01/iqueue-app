@@ -18,7 +18,6 @@ router.post('/', verifyToken, async (req, res) => {
     }
 
     const branch = await Branch.findById(branchId);
-
     if (!branch || !branch.isActive) {
       return res.status(404).json({
         success: false,
@@ -26,13 +25,10 @@ router.post('/', verifyToken, async (req, res) => {
       });
     }
 
-    const lastToken = await Token.findOne({ branchId })
-      .sort({ createdAt: -1 });
-
+    const lastToken = await Token.findOne({ branchId }).sort({ createdAt: -1 });
     const nextNumber = lastToken
       ? parseInt(lastToken.tokenNumber.split('-')[1]) + 1
       : 1;
-
     const tokenNumber = `CF-${String(nextNumber).padStart(3, '0')}`;
 
     const position = await Token.countDocuments({
@@ -52,9 +48,8 @@ router.post('/', verifyToken, async (req, res) => {
       arrivalTime: arrivalTime || null,
     });
 
-    socketService.emitTokenBooked(
-      token.branchId.toString(),
-);
+    socketService.emitTokenBooked(token.branchId.toString(), token);
+
     res.status(201).json({
       success: true,
       message: 'Token booked successfully',
@@ -103,7 +98,7 @@ router.get('/my', verifyToken, async (req, res) => {
   try {
     const token = await Token.findOne({
       customerId: req.user.id,
-      status: { $in: ['HELD', 'CALLABLE', 'CALLED', 'PRIORITY'] },
+      status: { $in: ['HELD', 'CALLABLE', 'CALLED', 'PRIORITY', 'SERVED', 'NO_SHOW'] },
     })
       .populate('branchId', 'name city')
       .sort({ createdAt: -1 });
@@ -165,23 +160,15 @@ router.post('/call-next', verifyToken, async (req, res) => {
 
     next.status = 'CALLED';
     next.calledAt = new Date();
-
     await next.save();
 
     const updatedQueue = await Token.find({
-    branchId: next.branchId,
-    status: { $in: ['CALLABLE', 'CALLED'] },
+      branchId: next.branchId,
+      status: { $in: ['CALLABLE', 'CALLED'] },
     }).sort({ position: 1 });
 
-    socketService.emitTokenCalled(
-    next.branchId.toString(),
-    next
-    );
-
-    socketService.emitQueueUpdated(
-    next.branchId.toString(),
-    updatedQueue
-    );
+    socketService.emitTokenCalled(next.branchId.toString(), next);
+    socketService.emitQueueUpdated(next.branchId.toString(), updatedQueue);
 
     res.status(200).json({
       success: true,
@@ -216,15 +203,8 @@ router.patch('/:id/served', verifyToken, async (req, res) => {
       status: { $in: ['CALLABLE', 'CALLED'] },
     }).sort({ position: 1 });
 
-    socketService.emitTokenServed(
-      token.branchId.toString(),
-      token
-    );
-
-    socketService.emitQueueUpdated(
-      token.branchId.toString(),
-      updatedQueue
-    );
+    socketService.emitTokenServed(token.branchId.toString(), token);
+    socketService.emitQueueUpdated(token.branchId.toString(), updatedQueue);
 
     res.status(200).json({
       success: true,
@@ -253,6 +233,14 @@ router.patch('/:id/no-show', verifyToken, async (req, res) => {
         message: 'Token not found',
       });
     }
+
+    const updatedQueue = await Token.find({
+      branchId: token.branchId,
+      status: { $in: ['CALLABLE', 'CALLED'] },
+    }).sort({ position: 1 });
+
+    socketService.emitTokenServed(token.branchId.toString(), token);
+    socketService.emitQueueUpdated(token.branchId.toString(), updatedQueue);
 
     res.status(200).json({
       success: true,
@@ -336,4 +324,5 @@ router.post('/walkin', verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
 module.exports = router;

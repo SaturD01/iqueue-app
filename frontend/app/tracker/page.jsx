@@ -4,7 +4,7 @@
  *              and 5-minute countdown timer for CALLED status.
  * @author M1 — WDD Wickramaratne (22UG3-0550)
  * @created 2026-04-14
- * @updated 2026-04-18
+ * @updated 2026-06-28
  */
 
 'use client';
@@ -12,8 +12,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-
-
 
 const STATUS_CONFIG = {
   HELD: {
@@ -67,8 +65,7 @@ const STATUS_CONFIG = {
 };
 
 const DEMO_STATUSES = ['HELD', 'CALLABLE', 'CALLED', 'SERVED', 'NO_SHOW', 'PRIORITY'];
-
-const COUNTDOWN_SECONDS = 5 * 60; // 5 minutes
+const COUNTDOWN_SECONDS = 5 * 60;
 
 export default function TrackerPage() {
   const router = useRouter();
@@ -129,6 +126,16 @@ export default function TrackerPage() {
       if (token && calledToken._id === token._id) {
         fetchToken();
       }
+    });
+
+    socket.on('token:served', ({ token: servedToken }) => {
+      if (token && servedToken._id === token._id) {
+        fetchToken();
+      }
+    });
+
+    socket.on('token:booked', () => {
+      fetchToken();
     });
 
     socket.on('queue:updated', () => {
@@ -194,6 +201,7 @@ export default function TrackerPage() {
   }
 
   if (!token) return null;
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-md mx-auto">
