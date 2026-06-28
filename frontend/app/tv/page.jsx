@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { io } from 'socket.io-client';
 import api from '@/lib/api';
@@ -25,8 +25,8 @@ export default function TVDisplayPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch initial queue
-  const fetchQueue = async () => {
+  // Fetch queue
+  const fetchQueue = useCallback(async () => {
     try {
       const response = await api.get(`/api/tokens/queue?branchId=${branchId}`);
       const tokens = response.data.tokens || [];
@@ -37,11 +37,11 @@ export default function TVDisplayPage() {
     } catch (err) {
       console.error('TV fetch error:', err.message);
     }
-  };
+  }, [branchId]);
 
   useEffect(() => {
     fetchQueue();
-  }, [branchId]);
+  }, [fetchQueue]);
 
   // Socket.io
   useEffect(() => {
@@ -65,8 +65,16 @@ export default function TVDisplayPage() {
       setNowServing(token);
     });
 
+    socket.on('token:booked', () => {
+      fetchQueue();
+    });
+
+    socket.on('token:served', () => {
+      fetchQueue();
+    });
+
     return () => socket.disconnect();
-  }, [branchId]);
+  }, [branchId, fetchQueue]);
 
   return (
     <div className='min-h-screen bg-blue-900 flex flex-col overflow-hidden'>
