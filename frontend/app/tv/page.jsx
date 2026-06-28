@@ -7,7 +7,7 @@ import api from '@/lib/api';
 
 export default function TVDisplayPage() {
   const searchParams = useSearchParams();
-  const branchId = searchParams.get('branch') || '6a11ee395c53935639152908';
+  const branchId = searchParams.get('branch') || 'aaaaaa000000000000000001';
 
   const [time, setTime] = useState('');
   const [nowServing, setNowServing] = useState(null);
