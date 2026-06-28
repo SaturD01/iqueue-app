@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '@/lib/api';
 
 export default function ManagerDashboardPage() {
@@ -13,6 +13,7 @@ export default function ManagerDashboardPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [loadingAi, setLoadingAi] = useState(false);
   const [fetchError, setFetchError] = useState('');
+  const [branchId, setBranchId] = useState('aaaaaa000000000000000001');
 
   // Auth guard — manager/admin only
   useEffect(() => {
@@ -21,20 +22,23 @@ export default function ManagerDashboardPage() {
     const user = JSON.parse(localStorage.getItem('iqueue_user') || '{}');
     if (user.role !== 'manager' && user.role !== 'admin') {
       router.push('/login');
+      return;
     }
+    if (user.branchId) setBranchId(user.branchId);
   }, []);
 
   // Fetch analytics on page load
   useEffect(() => {
+    if (!branchId) return;
     const fetchAnalytics = async () => {
       setLoadingData(true);
       setFetchError('');
       try {
         const [summaryRes, hourlyRes] = await Promise.all([
-          api.get('/api/analytics/summary'),
-          api.get('/api/analytics/hourly'),
+          api.get(`/api/analytics/summary?branchId=${branchId}`),
+          api.get(`/api/analytics/hourly?branchId=${branchId}`),
         ]);
-        setSummary(summaryRes.data);
+        setSummary(summaryRes.data.summary);
         setHourlyData(hourlyRes.data.hourly || []);
       } catch (err) {
         setFetchError('Could not load analytics. Please refresh.');
@@ -43,18 +47,18 @@ export default function ManagerDashboardPage() {
       }
     };
     fetchAnalytics();
-  }, []);
+  }, [branchId]);
 
   const handleAiAnalysis = async () => {
     setLoadingAi(true);
     setAiAnalysis('');
     try {
-      const res = await api.get('/api/analytics/summary');
-      const stats = res.data;
+      const res = await api.get(`/api/analytics/summary?branchId=${branchId}`);
+      const stats = res.data.summary;
       const aiRes = await api.post('/api/admin/ai-recommendation', {
-        servedCount: stats.servedCount || 0,
-        avgWaitMinutes: stats.avgWaitMinutes || 0,
-        noShowCount: stats.noShowCount || 0,
+        servedCount: stats.totalServed || 0,
+        avgWaitMinutes: stats.avgServiceTimeMinutes || 0,
+        noShowCount: stats.totalNoShows || 0,
       });
       setAiAnalysis(aiRes.data.recommendation);
     } catch (err) {
@@ -96,16 +100,16 @@ export default function ManagerDashboardPage() {
         <div className='grid grid-cols-3 gap-4 mb-6'>
           <div className='bg-white rounded-2xl border border-gray-200 p-5'>
             <p className='text-xs text-gray-400 uppercase tracking-wide mb-1'>Customers Served Today</p>
-            <p className='text-4xl font-bold text-blue-900'>{summary?.servedCount ?? '--'}</p>
+            <p className='text-4xl font-bold text-blue-900'>{summary?.totalServed ?? '--'}</p>
           </div>
           <div className='bg-white rounded-2xl border border-gray-200 p-5'>
             <p className='text-xs text-gray-400 uppercase tracking-wide mb-1'>No-Shows Today</p>
-            <p className='text-4xl font-bold text-red-600'>{summary?.noShowCount ?? '--'}</p>
+            <p className='text-4xl font-bold text-red-600'>{summary?.totalNoShows ?? '--'}</p>
           </div>
           <div className='bg-white rounded-2xl border border-gray-200 p-5'>
-            <p className='text-xs text-gray-400 uppercase tracking-wide mb-1'>Avg Wait Time</p>
+            <p className='text-xs text-gray-400 uppercase tracking-wide mb-1'>Avg Service Time</p>
             <p className='text-4xl font-bold text-green-700'>
-              {summary?.avgWaitMinutes ?? '--'}
+              {summary?.avgServiceTimeMinutes ?? '--'}
               <span className='text-lg font-normal text-gray-400 ml-1'>min</span>
             </p>
           </div>
