@@ -52,13 +52,21 @@ export default function StaffPanelPage() {
     }
   }, []);
 
-  // Fetch queue
+  // Fetch queue — also clears calledToken if cron auto-marked it NO_SHOW
   const fetchQueue = useCallback(async () => {
     if (!branchId) return;
     try {
       setFetchError('');
       const response = await api.get(`/api/tokens/queue?branchId=${branchId}`);
-      setQueue(response.data.tokens || []);
+      const tokens = response.data.tokens || [];
+      setQueue(tokens);
+      setCalledToken(prev => {
+        if (!prev) return null;
+        const stillActive = tokens.find(
+          t => t._id === prev._id && t.status === 'CALLED'
+        );
+        return stillActive || null;
+      });
     } catch (err) {
       setFetchError('Could not load queue. Please refresh.');
     }
@@ -86,7 +94,8 @@ export default function StaffPanelPage() {
     setLoading(true); setActionError('');
     try {
       await api.patch(`/api/tokens/${tokenId}/served`);
-      setCalledToken(null); await fetchQueue();
+      setCalledToken(null);
+      await fetchQueue();
     } catch (err) {
       setActionError('Could not mark as served.');
     } finally { setLoading(false); }
@@ -96,7 +105,8 @@ export default function StaffPanelPage() {
     setLoading(true); setActionError('');
     try {
       await api.patch(`/api/tokens/${tokenId}/no-show`);
-      setCalledToken(null); await fetchQueue();
+      setCalledToken(null);
+      await fetchQueue();
     } catch (err) {
       setActionError('Could not mark as no-show.');
     } finally { setLoading(false); }
@@ -134,7 +144,7 @@ export default function StaffPanelPage() {
   return (
     <div className='min-h-screen bg-gray-50'>
 
-      {/* Print slip — only visible when printing */}
+      {/* Print slip */}
       {printSlip && (
         <div className='print-only fixed inset-0 bg-white z-50 flex items-center justify-center'
              style={{ display: 'none' }}>
