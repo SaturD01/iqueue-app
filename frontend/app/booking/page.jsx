@@ -6,12 +6,9 @@ import Link from 'next/link';
 import api from '@/lib/api';
 
 const SERVICES = [
-  'Cash Deposit',
-  'Account Opening',
-  'Card Services',
-  'Loan Inquiry',
-  'Document Submission',
-  'General Inquiry',
+  { counter: 'Counter 1 — Cash', options: ['Cash Deposit'] },
+  { counter: 'Counter 2 — Account & Inquiry', options: ['Account Opening', 'General Inquiry', 'Document Submission'] },
+  { counter: 'Counter 3 — Loans & Cards', options: ['Loan Inquiry', 'Card Services'] },
 ];
 
 export default function BookingPage() {
@@ -183,7 +180,11 @@ export default function BookingPage() {
                   className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.service ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 >
                   <option value=''>Choose a service...</option>
-                  {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {SERVICES.map(group => (
+                    <optgroup key={group.counter} label={group.counter}>
+                      {group.options.map(s => <option key={s} value={s}>{s}</option>)}
+                    </optgroup>
+                  ))}
                 </select>
                 {errors.service && <p className='text-red-500 text-xs mt-1'>{errors.service}</p>}
               </div>
