@@ -23,6 +23,7 @@ export default function BookingPage() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [bookedToken, setBookedToken] = useState(null);
+  const [queueCount, setQueueCount] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('iqueue_token');
@@ -46,7 +47,15 @@ export default function BookingPage() {
     localStorage.removeItem('iqueue_user');
     router.push('/login');
   };
-
+  const fetchQueueCount = async (branchId) => {
+    if (!branchId) { setQueueCount(null); return; }
+    try {
+      const response = await api.get(`/api/tokens/queue?branchId=${branchId}`);
+      setQueueCount(response.data.count || 0);
+    } catch {
+      setQueueCount(null);
+    }
+  };
   const getMinTime = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 15);
@@ -181,7 +190,7 @@ export default function BookingPage() {
                 {branchError && <p className='text-red-500 text-xs mb-2'>{branchError}</p>}
                 <select
                   value={form.branch}
-                  onChange={(e) => { setForm({ ...form, branch: e.target.value }); setErrors({ ...errors, branch: '' }); }}
+                  onChange={(e) => { setForm({ ...form, branch: e.target.value }); setErrors({ ...errors, branch: '' }); fetchQueueCount(e.target.value); }}
                   className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition ${errors.branch ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-blue-400'}`}
                 >
                   <option value=''>Choose a branch...</option>
@@ -190,6 +199,11 @@ export default function BookingPage() {
                   ))}
                 </select>
                 {errors.branch && <p className='text-red-500 text-xs mt-1'>{errors.branch}</p>}
+                {queueCount !== null && (
+                  <p className='text-xs text-blue-700 mt-2 font-medium'>
+                    🟢 {queueCount} {queueCount === 1 ? 'customer' : 'customers'} currently waiting at this branch
+                  </p>
+                )}
               </div>
 
               {/* Service */}
