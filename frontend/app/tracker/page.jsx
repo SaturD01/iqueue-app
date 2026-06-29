@@ -301,8 +301,8 @@ export default function TrackerPage() {
               <p className="text-xs text-gray-400 mt-1">Position</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
-              <p className="text-2xl font-bold text-blue-900">{position ? (position - 1) * 5 : 0}</p>
-              <p className="text-xs text-gray-400 mt-1">Est. mins</p>
+              <p className="text-2xl font-bold text-blue-900">~{position ? (position - 1) * 5 : 0}</p>
+              <p className="text-xs text-gray-400 mt-1">Est. wait (min)</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
               <p className="text-lg font-bold text-blue-900">{nowServing || '--'}</p>
