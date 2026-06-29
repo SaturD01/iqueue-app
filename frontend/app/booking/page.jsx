@@ -239,10 +239,9 @@ export default function BookingPage() {
                     />
                     {errors.arrivalTime && <p className='text-red-500 text-xs mt-1'>{errors.arrivalTime}</p>}
                     <div className='bg-yellow-50 border border-yellow-200 rounded-xl p-3 mt-3 text-sm text-yellow-700'>
-                      Your token is safely held until your selected arrival time.
-                      You will not be marked no-show while on your way.
-                      Once your arrival time is reached, your token will join the live queue
-                      and will be called in booking order alongside other customers.
+                      No need to wait at the branch! Your token is safely held until your selected arrival time.
+                      Simply arrive around your chosen time and track your position live on your phone.
+                      Head to the counter only when you are nearly called.
                     </div>
                   </div>
                 )}
