@@ -18,13 +18,14 @@ const tokenSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['HELD', 'CALLABLE', 'CALLED', 'SERVED', 'NO_SHOW', 'PRIORITY'],
+    enum: ['HELD', 'CALLABLE', 'CALLED', 'SERVED', 'NO_SHOW', 'PRIORITY', 'CANCELLED'],
     default: 'CALLABLE'
   },
   position: { type: Number, required: true },
   arrivalTime: { type: Date, default: null },
   calledAt: { type: Date, default: null },
   servedAt: { type: Date, default: null },
+  cancelledAt: { type: Date, default: null },
   serviceTimeMinutes: { type: Number, default: null },
   isWalkIn: { type: Boolean, default: false },
   walkInName: { type: String, default: null, trim: true },

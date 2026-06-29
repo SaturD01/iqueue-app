@@ -1,3 +1,10 @@
+/**
+ * @file token.route.js
+ * @description Token API routes — book, track, queue management, walk-in, cancel
+ * @author M4 — IMT Ilangasinghe | cancel route added by M1 — WDD Wickramaratne
+ * @updated 2026-06-29
+ */
+
 const socketService = require('../services/socket.service');
 const express = require('express');
 const router = express.Router();
@@ -22,6 +29,18 @@ router.post('/', verifyToken, async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Branch not found or inactive',
+      });
+    }
+
+    // Check customer does not already have an active token
+    const existing = await Token.findOne({
+      customerId: req.user.id,
+      status: { $in: ['HELD', 'CALLABLE', 'CALLED', 'PRIORITY'] },
+    });
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: 'You already have an active token. Cancel it before booking a new one.',
       });
     }
 
@@ -98,7 +117,7 @@ router.get('/my', verifyToken, async (req, res) => {
   try {
     const token = await Token.findOne({
       customerId: req.user.id,
-      status: { $in: ['HELD', 'CALLABLE', 'CALLED', 'PRIORITY', 'SERVED', 'NO_SHOW'] },
+      status: { $in: ['HELD', 'CALLABLE', 'CALLED', 'PRIORITY', 'SERVED', 'NO_SHOW', 'CANCELLED'] },
     })
       .populate('branchId', 'name city')
       .sort({ createdAt: -1 });
@@ -250,6 +269,60 @@ router.patch('/:id/no-show', verifyToken, async (req, res) => {
 
   } catch (error) {
     console.error('No-show error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// PATCH /api/tokens/:id/cancel — customer cancels their own token
+router.patch('/:id/cancel', verifyToken, async (req, res) => {
+  try {
+    const token = await Token.findById(req.params.id);
+
+    if (!token) {
+      return res.status(404).json({
+        success: false,
+        message: 'Token not found',
+      });
+    }
+
+    // Only the token owner can cancel
+    if (token.customerId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only cancel your own token',
+      });
+    }
+
+    // Cannot cancel once already called, served, no-show, or cancelled
+    const cancellableStatuses = ['CALLABLE', 'HELD', 'PRIORITY'];
+    if (!cancellableStatuses.includes(token.status)) {
+      return res.status(400).json({
+        success: false,
+        message: token.status === 'CALLED'
+          ? 'Your token has already been called. Please proceed to the counter.'
+          : 'This token cannot be cancelled.',
+      });
+    }
+
+    token.status = 'CANCELLED';
+    token.cancelledAt = new Date();
+    await token.save();
+
+    const updatedQueue = await Token.find({
+      branchId: token.branchId,
+      status: { $in: ['CALLABLE', 'CALLED', 'PRIORITY'] },
+    }).sort({ position: 1 });
+
+    socketService.emitQueueUpdated(token.branchId.toString(), updatedQueue);
+
+    res.status(200).json({
+      success: true,
+      message: 'Token cancelled successfully',
+      token,
+    });
+
+  } catch (error) {
+    console.error('Cancel token error:', error.message);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

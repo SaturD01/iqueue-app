@@ -1,10 +1,11 @@
 /**
  * @file tracker/page.jsx
- * @description Live Queue Tracker page with status demo buttons
- *              and 5-minute countdown timer for CALLED status.
+ * @description Live Queue Tracker page with real-time status updates,
+ *              5-minute countdown timer for CALLED status, cancel token,
+ *              and star rating after SERVED.
  * @author M1 — WDD Wickramaratne (22UG3-0550)
  * @created 2026-04-14
- * @updated 2026-06-28
+ * @updated 2026-06-29
  */
 
 'use client';
@@ -52,7 +53,7 @@ const STATUS_CONFIG = {
     badge: 'bg-red-100 text-red-800',
     pulse: false,
     message: 'You were marked as no-show.',
-    sub: 'Please visit the branch to book a new token.',
+    sub: 'You may book a new token at any time.',
   },
   PRIORITY: {
     bg: 'bg-purple-50',
@@ -62,10 +63,20 @@ const STATUS_CONFIG = {
     message: 'You have been issued a priority token.',
     sub: 'Please proceed to the counter immediately.',
   },
+  CANCELLED: {
+    bg: 'bg-gray-50',
+    border: 'border-gray-300',
+    badge: 'bg-gray-100 text-gray-500',
+    pulse: false,
+    message: 'Your token has been cancelled.',
+    sub: 'You may book a new token at any time.',
+  },
 };
 
-const DEMO_STATUSES = ['HELD', 'CALLABLE', 'CALLED', 'SERVED', 'NO_SHOW', 'PRIORITY'];
+const DEMO_STATUSES = ['HELD', 'CALLABLE', 'CALLED', 'SERVED', 'NO_SHOW', 'PRIORITY', 'CANCELLED'];
 const COUNTDOWN_SECONDS = 5 * 60;
+const CANCELLABLE_STATUSES = ['CALLABLE', 'HELD', 'PRIORITY'];
+const TERMINAL_STATUSES = ['SERVED', 'NO_SHOW', 'CANCELLED'];
 
 export default function TrackerPage() {
   const router = useRouter();
@@ -77,6 +88,8 @@ export default function TrackerPage() {
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
   const [rating, setRating] = useState(0);
   const [rated, setRated] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
 
   const config = STATUS_CONFIG[token?.status] || STATUS_CONFIG.CALLABLE;
 
@@ -107,7 +120,6 @@ export default function TrackerPage() {
     fetchToken();
   }, [fetchToken]);
 
-  // Socket.io real-time updates
   useEffect(() => {
     const jwt = localStorage.getItem('iqueue_token');
     if (!jwt) return;
@@ -123,29 +135,19 @@ export default function TrackerPage() {
     }
 
     socket.on('token:called', ({ token: calledToken }) => {
-      if (token && calledToken._id === token._id) {
-        fetchToken();
-      }
+      if (token && calledToken._id === token._id) fetchToken();
     });
 
     socket.on('token:served', ({ token: servedToken }) => {
-      if (token && servedToken._id === token._id) {
-        fetchToken();
-      }
+      if (token && servedToken._id === token._id) fetchToken();
     });
 
-    socket.on('token:booked', () => {
-      fetchToken();
-    });
-
-    socket.on('queue:updated', () => {
-      fetchToken();
-    });
+    socket.on('token:booked', () => fetchToken());
+    socket.on('queue:updated', () => fetchToken());
 
     return () => socket.disconnect();
   }, [token, fetchToken]);
 
-  // Countdown timer for CALLED status
   useEffect(() => {
     if (token?.status !== 'CALLED') {
       setCountdown(COUNTDOWN_SECONDS);
@@ -164,16 +166,40 @@ export default function TrackerPage() {
     return `${m}:${String(s).padStart(2, '0')}`;
   };
 
+  const handleCancelToken = async () => {
+    if (!token) return;
+    setCancelError('');
+    setCancelling(true);
+    try {
+      await api.patch(`/api/tokens/${token._id}/cancel`);
+      await fetchToken();
+    } catch (err) {
+      setCancelError(err.response?.data?.message || 'Could not cancel token. Please try again.');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const handleRating = async (score) => {
+    setRating(score);
+    try {
+      await api.post('/api/ratings', {
+        tokenId: token._id,
+        branchId: token.branchId._id || token.branchId,
+        score,
+      });
+      setRated(true);
+    } catch {
+      setRated(true);
+    }
+  };
+
   const handleStatusChange = (status) => {
     setToken(prev => ({ ...prev, status }));
     setCountdown(COUNTDOWN_SECONDS);
     setRated(false);
     setRating(0);
-  };
-
-  const handleRating = (score) => {
-    setRating(score);
-    setRated(true);
+    setCancelError('');
   };
 
   if (loading) {
@@ -206,13 +232,11 @@ export default function TrackerPage() {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-md mx-auto">
 
-        {/* Header */}
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-blue-900">iQueue</h1>
           <p className="text-gray-400 text-sm mt-1">Live Queue Tracker</p>
         </div>
 
-        {/* Token number card */}
         <div className={`rounded-2xl border-2 p-6 mb-4 text-center ${config.bg} ${config.border}`}>
           <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Your Token</p>
           <p className="text-7xl font-bold text-blue-900 mb-3">{token.tokenNumber}</p>
@@ -222,7 +246,6 @@ export default function TrackerPage() {
           </span>
         </div>
 
-        {/* CALLED countdown timer */}
         {token.status === 'CALLED' && (
           <div className={`rounded-2xl border-2 p-4 mb-4 text-center ${countdown <= 60 ? 'bg-red-50 border-red-400' : 'bg-green-50 border-green-400'}`}>
             <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Time Remaining</p>
@@ -235,14 +258,12 @@ export default function TrackerPage() {
           </div>
         )}
 
-        {/* Status message */}
         <div className={`rounded-2xl border-2 p-4 mb-4 ${config.bg} ${config.border}`}>
           <p className="font-semibold text-gray-800">{config.message}</p>
           <p className="text-sm text-gray-500 mt-1">{config.sub}</p>
         </div>
 
-        {/* Queue stats */}
-        {!['SERVED', 'NO_SHOW'].includes(token.status) && (
+        {!TERMINAL_STATUSES.includes(token.status) && token.status !== 'CALLED' && (
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
               <p className="text-2xl font-bold text-blue-900">#{position}</p>
@@ -259,7 +280,6 @@ export default function TrackerPage() {
           </div>
         )}
 
-        {/* Branch and service info */}
         <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-gray-400">Branch</span>
@@ -271,13 +291,39 @@ export default function TrackerPage() {
           </div>
         </div>
 
-        {/* Live indicator */}
-        <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mb-6">
-          <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-          <span>Live updates active</span>
-        </div>
+        {CANCELLABLE_STATUSES.includes(token.status) && (
+          <div className="mb-4">
+            {cancelError && (
+              <p className="text-red-500 text-sm text-center mb-2">{cancelError}</p>
+            )}
+            <button
+              onClick={handleCancelToken}
+              disabled={cancelling}
+              className="w-full py-3 rounded-xl border-2 border-red-300 text-red-600 font-semibold hover:bg-red-50 hover:border-red-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {cancelling ? 'Cancelling...' : 'Cancel Token'}
+            </button>
+          </div>
+        )}
 
-        {/* Star rating — shown after SERVED */}
+        {TERMINAL_STATUSES.includes(token.status) && (
+          <div className="mb-4">
+            <a
+              href="/booking"
+              className="block w-full py-3 rounded-xl bg-blue-900 text-white font-semibold text-center hover:bg-blue-800 transition"
+            >
+              Book a New Token
+            </a>
+          </div>
+        )}
+
+        {!TERMINAL_STATUSES.includes(token.status) && (
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mb-6">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            <span>Live updates active</span>
+          </div>
+        )}
+
         {token.status === 'SERVED' && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center mb-4">
             <p className="font-semibold text-gray-800 mb-1">How was your experience?</p>
@@ -287,7 +333,8 @@ export default function TrackerPage() {
                 <button
                   key={star}
                   onClick={() => handleRating(star)}
-                  className={`text-4xl transition-transform hover:scale-110 ${star <= rating ? 'text-yellow-400' : 'text-gray-200'}`}
+                  disabled={rated}
+                  className={`text-4xl transition-transform hover:scale-110 disabled:cursor-default ${star <= rating ? 'text-yellow-400' : 'text-gray-200'}`}
                 >
                   ★
                 </button>
@@ -301,7 +348,6 @@ export default function TrackerPage() {
           </div>
         )}
 
-        {/* Demo status buttons — for viva demonstration */}
         <div className="bg-white rounded-2xl border border-gray-200 p-4">
           <p className="text-xs text-gray-400 uppercase tracking-widest mb-3 text-center">
             Demo — Switch Status
@@ -327,3 +373,4 @@ export default function TrackerPage() {
     </div>
   );
 }
+
