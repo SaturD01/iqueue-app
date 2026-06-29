@@ -15,10 +15,21 @@ const STATUS_BADGE = {
 
 const PRIORITY_REASONS = ['Elderly', 'Disability', 'VIP', 'Pregnant', 'Other'];
 
-const SERVICES = [
-  'Cash Deposit', 'Account Opening', 'Card Services',
-  'Loan Inquiry', 'Document Submission', 'General Inquiry',
+const COUNTERS = [
+  { id: 1, name: 'Counter 1', label: 'Cash', color: 'blue', services: ['Cash Deposit'] },
+  { id: 2, name: 'Counter 2', label: 'Account & Inquiry', color: 'teal', services: ['Account Opening', 'General Inquiry', 'Document Submission'] },
+  { id: 3, name: 'Counter 3', label: 'Loans & Cards', color: 'indigo', services: ['Loan Inquiry', 'Card Services'] },
 ];
+
+const COUNTER_STYLES = {
+  blue:   { tab: 'border-blue-600 text-blue-700 bg-blue-50',   inactive: 'border-gray-200 text-gray-500 hover:border-blue-300',   badge: 'bg-blue-100 text-blue-700' },
+  teal:   { tab: 'border-teal-600 text-teal-700 bg-teal-50',   inactive: 'border-gray-200 text-gray-500 hover:border-teal-300',   badge: 'bg-teal-100 text-teal-700' },
+  indigo: { tab: 'border-indigo-600 text-indigo-700 bg-indigo-50', inactive: 'border-gray-200 text-gray-500 hover:border-indigo-300', badge: 'bg-indigo-100 text-indigo-700' },
+};
+
+function getCounterForService(serviceName) {
+  return COUNTERS.find(c => c.services.includes(serviceName)) || COUNTERS[0];
+}
 
 export default function StaffPanelPage() {
   const router = useRouter();
@@ -29,6 +40,7 @@ export default function StaffPanelPage() {
   const [actionError, setActionError] = useState('');
   const [branchId, setBranchId] = useState('');
   const [branchName, setBranchName] = useState('');
+  const [activeCounter, setActiveCounter] = useState(1);
 
   const [showWalkIn, setShowWalkIn] = useState(false);
   const [walkInForm, setWalkInForm] = useState({
@@ -134,12 +146,15 @@ export default function StaffPanelPage() {
 
   const handlePrint = () => window.print();
 
-  const activeTokens = queue.filter(t => !['SERVED', 'NO_SHOW'].includes(t.status));
+  const activeCounter_obj = COUNTERS.find(c => c.id === activeCounter);
+  const counterTokens = queue.filter(t =>
+    !['SERVED', 'NO_SHOW'].includes(t.status) &&
+    activeCounter_obj.services.includes(t.serviceName)
+  );
 
   return (
     <div className='min-h-screen bg-gray-50'>
 
-      {/* Print CSS — hides everything except slip on print */}
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
@@ -157,88 +172,32 @@ export default function StaffPanelPage() {
         }
       `}</style>
 
-      {/* Print slip — hidden on screen, shown on print */}
       {printSlip && (
         <div id='print-slip' style={{ display: 'none' }}>
-          <div style={{
-            fontFamily: 'Arial, sans-serif',
-            textAlign: 'center',
-            padding: '40px 32px',
-            border: '3px solid #1e3a5f',
-            borderRadius: '16px',
-            maxWidth: '340px',
-            width: '100%',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-          }}>
-            {/* Logo */}
-            <div style={{ marginBottom: '4px' }}>
-              <span style={{ fontSize: '32px', fontWeight: '900', color: '#1e3a5f', letterSpacing: '-1px' }}>iQueue</span>
-            </div>
-            <p style={{ color: '#888', fontSize: '11px', margin: '0 0 6px', letterSpacing: '1px', textTransform: 'uppercase' }}>
-              Smart Bank Queue Management
-            </p>
-            <p style={{ color: '#aaa', fontSize: '11px', margin: '0 0 24px' }}>
-              {branchName}
-            </p>
-
-            {/* Divider */}
+          <div style={{ fontFamily: 'Arial, sans-serif', textAlign: 'center', padding: '40px 32px', border: '3px solid #1e3a5f', borderRadius: '16px', maxWidth: '340px', width: '100%' }}>
+            <span style={{ fontSize: '32px', fontWeight: '900', color: '#1e3a5f' }}>iQueue</span>
+            <p style={{ color: '#888', fontSize: '11px', margin: '4px 0 6px', letterSpacing: '1px', textTransform: 'uppercase' }}>Smart Bank Queue Management</p>
+            <p style={{ color: '#aaa', fontSize: '11px', margin: '0 0 24px' }}>{branchName}</p>
             <div style={{ borderTop: '1px dashed #ddd', margin: '0 0 24px' }}></div>
-
-            {/* Token number */}
-            <p style={{ color: '#555', fontSize: '12px', margin: '0 0 4px', letterSpacing: '2px', textTransform: 'uppercase' }}>
-              Your Token Number
-            </p>
-            <p style={{ color: '#1e3a5f', fontSize: '88px', fontWeight: '900', margin: '0 0 4px', fontFamily: 'monospace', lineHeight: 1 }}>
-              {printSlip.tokenNumber}
-            </p>
-
-            {/* Priority badge */}
+            <p style={{ color: '#555', fontSize: '12px', margin: '0 0 4px', letterSpacing: '2px', textTransform: 'uppercase' }}>Your Token Number</p>
+            <p style={{ color: '#1e3a5f', fontSize: '88px', fontWeight: '900', margin: '0 0 4px', fontFamily: 'monospace', lineHeight: 1 }}>{printSlip.tokenNumber}</p>
             {printSlip.priorityReason && (
-              <div style={{
-                display: 'inline-block',
-                background: '#f3e8ff',
-                color: '#6b21a8',
-                fontSize: '12px',
-                fontWeight: '700',
-                padding: '4px 14px',
-                borderRadius: '99px',
-                margin: '8px 0 0',
-                letterSpacing: '0.5px',
-              }}>
+              <div style={{ display: 'inline-block', background: '#f3e8ff', color: '#6b21a8', fontSize: '12px', fontWeight: '700', padding: '4px 14px', borderRadius: '99px', margin: '8px 0 0' }}>
                 ★ PRIORITY — {printSlip.priorityReason.toUpperCase()}
               </div>
             )}
-
-            {/* Service */}
-            <p style={{ color: '#444', fontSize: '14px', margin: '16px 0 0', fontWeight: '600' }}>
-              {printSlip.serviceName}
+            <p style={{ color: '#444', fontSize: '14px', margin: '16px 0 0', fontWeight: '600' }}>{printSlip.serviceName}</p>
+            {printSlip.walkInName && <p style={{ color: '#888', fontSize: '12px', margin: '4px 0 0' }}>{printSlip.walkInName}</p>}
+            <p style={{ color: '#666', fontSize: '12px', margin: '8px 0 0' }}>
+              {getCounterForService(printSlip.serviceName).name} — {getCounterForService(printSlip.serviceName).label}
             </p>
-
-            {/* Customer name */}
-            {printSlip.walkInName && (
-              <p style={{ color: '#888', fontSize: '12px', margin: '4px 0 0' }}>
-                {printSlip.walkInName}
-              </p>
-            )}
-
-            {/* Divider */}
             <div style={{ borderTop: '1px dashed #ddd', margin: '20px 0' }}></div>
-
-            {/* Instructions */}
             <p style={{ color: '#333', fontSize: '12px', margin: '0 0 6px', lineHeight: '1.6' }}>
-              Please watch the display screen.<br />
-              Proceed to the counter when your number is called.
+              Please watch the display screen.<br />Proceed to the counter when your number is called.
             </p>
-            <p style={{ color: '#e74c3c', fontSize: '12px', fontWeight: '600', margin: '0 0 16px' }}>
-              You have 5 minutes to reach the counter when called.
-            </p>
-
-            {/* Date/time */}
-            <p style={{ color: '#bbb', fontSize: '10px', margin: '0', letterSpacing: '0.5px' }}>
-              {new Date().toLocaleString('en-LK', {
-                year: 'numeric', month: 'long', day: 'numeric',
-                hour: '2-digit', minute: '2-digit',
-              })}
+            <p style={{ color: '#e74c3c', fontSize: '12px', fontWeight: '600', margin: '0 0 16px' }}>You have 5 minutes to reach the counter when called.</p>
+            <p style={{ color: '#bbb', fontSize: '10px', margin: '0' }}>
+              {new Date().toLocaleString('en-LK', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
         </div>
@@ -251,17 +210,12 @@ export default function StaffPanelPage() {
           <p className='text-blue-300 text-sm'>Staff Queue Panel</p>
         </div>
         <div className='flex items-center gap-3'>
-          <button
-            onClick={() => { setShowWalkIn(true); setPrintSlip(null); }}
-            className='bg-orange-500 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-orange-600 transition'
-          >
+          <button onClick={() => { setShowWalkIn(true); setPrintSlip(null); }}
+            className='bg-orange-500 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-orange-600 transition'>
             + Walk-in
           </button>
-          <button
-            onClick={handleCallNext}
-            disabled={loading}
-            className='bg-white text-blue-900 px-5 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition disabled:opacity-60'
-          >
+          <button onClick={handleCallNext} disabled={loading}
+            className='bg-white text-blue-900 px-5 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition disabled:opacity-60'>
             {loading ? 'Loading...' : 'Call Next'}
           </button>
         </div>
@@ -271,6 +225,7 @@ export default function StaffPanelPage() {
       {calledToken && (
         <div className='bg-green-500 text-white text-center py-3 font-semibold'>
           Now calling: {calledToken.tokenNumber} — {calledToken.serviceName}
+          <span className='ml-2 text-green-100 text-sm'>({getCounterForService(calledToken.serviceName).name})</span>
           <div className='flex justify-center gap-3 mt-2'>
             <button onClick={() => handleServed(calledToken._id)} disabled={loading}
               className='bg-white text-green-700 px-4 py-1 rounded-lg text-sm font-semibold hover:bg-green-50 transition disabled:opacity-60'>
@@ -284,7 +239,7 @@ export default function StaffPanelPage() {
         </div>
       )}
 
-      {/* Print slip success banner */}
+      {/* Print slip banner */}
       {printSlip && (
         <div className='bg-orange-50 border-b border-orange-200 px-6 py-3 flex items-center justify-between'>
           <div>
@@ -310,25 +265,39 @@ export default function StaffPanelPage() {
       {actionError && <div className='bg-orange-50 border-b border-orange-200 text-orange-600 text-sm px-6 py-3'>{actionError}</div>}
 
       <div className='p-6'>
+
+        {/* Counter tabs */}
         <div className='grid grid-cols-3 gap-4 mb-6'>
-          <div className='bg-white rounded-xl border border-gray-200 p-4 text-center'>
-            <p className='text-2xl font-bold text-blue-900'>{activeTokens.length}</p>
-            <p className='text-xs text-gray-400 mt-1'>In Queue</p>
-          </div>
-          <div className='bg-white rounded-xl border border-gray-200 p-4 text-center'>
-            <p className='text-2xl font-bold text-green-700'>{queue.filter(t => t.status === 'CALLABLE').length}</p>
-            <p className='text-xs text-gray-400 mt-1'>Callable</p>
-          </div>
-          <div className='bg-white rounded-xl border border-gray-200 p-4 text-center'>
-            <p className='text-2xl font-bold text-purple-700'>{queue.filter(t => t.status === 'PRIORITY').length}</p>
-            <p className='text-xs text-gray-400 mt-1'>Priority</p>
-          </div>
+          {COUNTERS.map(counter => {
+            const count = queue.filter(t =>
+              !['SERVED', 'NO_SHOW'].includes(t.status) &&
+              counter.services.includes(t.serviceName)
+            ).length;
+            const styles = COUNTER_STYLES[counter.color];
+            return (
+              <button key={counter.id} onClick={() => setActiveCounter(counter.id)}
+                className={`rounded-xl border-2 p-4 text-center transition ${activeCounter === counter.id ? styles.tab : styles.inactive + ' bg-white'}`}>
+                <p className='text-2xl font-bold'>{count}</p>
+                <p className='text-xs font-semibold mt-1'>{counter.name}</p>
+                <p className='text-xs opacity-70'>{counter.label}</p>
+              </button>
+            );
+          })}
         </div>
 
-        {activeTokens.length === 0 ? (
+        {/* Active counter label */}
+        <div className='flex items-center gap-2 mb-4'>
+          <span className={`text-xs px-3 py-1 rounded-full font-semibold ${COUNTER_STYLES[activeCounter_obj.color].badge}`}>
+            {activeCounter_obj.name} — {activeCounter_obj.label}
+          </span>
+          <span className='text-xs text-gray-400'>{activeCounter_obj.services.join(' · ')}</span>
+        </div>
+
+        {/* Token table */}
+        {counterTokens.length === 0 ? (
           <div className='bg-white rounded-xl border border-gray-200 p-12 text-center'>
-            <p className='text-gray-400 text-lg'>No tokens in queue</p>
-            <p className='text-gray-300 text-sm mt-1'>All customers have been served</p>
+            <p className='text-gray-400 text-lg'>No tokens for this counter</p>
+            <p className='text-gray-300 text-sm mt-1'>{activeCounter_obj.services.join(' and ')} — all clear</p>
           </div>
         ) : (
           <div className='bg-white rounded-xl border border-gray-200 overflow-hidden'>
@@ -342,7 +311,7 @@ export default function StaffPanelPage() {
                 </tr>
               </thead>
               <tbody className='divide-y divide-gray-100'>
-                {activeTokens.map(token => (
+                {counterTokens.map(token => (
                   <tr key={token._id} className='hover:bg-gray-50 transition'>
                     <td className='px-4 py-4'>
                       <span className='font-bold text-blue-900'>{token.tokenNumber}</span>
@@ -378,39 +347,36 @@ export default function StaffPanelPage() {
           <div className='bg-white rounded-2xl shadow-xl w-full max-w-md p-6'>
             <h2 className='text-lg font-bold text-gray-800 mb-1'>Walk-in Customer</h2>
             <p className='text-sm text-gray-400 mb-6'>Book a token for a customer who walked in</p>
-
             <div className='space-y-4'>
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Customer Name *</label>
                 <input type='text' value={walkInForm.walkInName}
                   onChange={e => setWalkInForm({...walkInForm, walkInName: e.target.value})}
                   placeholder='e.g. Somawathie Perera'
-                  className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 transition'
-                />
+                  className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 transition' />
               </div>
-
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Service Type *</label>
                 <select value={walkInForm.serviceName}
                   onChange={e => setWalkInForm({...walkInForm, serviceName: e.target.value})}
-                  className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 transition'
-                >
+                  className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 transition'>
                   <option value=''>Choose a service...</option>
-                  {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {COUNTERS.map(counter => (
+                    <optgroup key={counter.id} label={`${counter.name} — ${counter.label}`}>
+                      {counter.services.map(s => <option key={s} value={s}>{s}</option>)}
+                    </optgroup>
+                  ))}
                 </select>
               </div>
-
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
-                  Customer Email <span className='text-gray-400 font-normal'>(optional — for confirmation email)</span>
+                  Customer Email <span className='text-gray-400 font-normal'>(optional)</span>
                 </label>
                 <input type='email' value={walkInForm.walkInEmail}
                   onChange={e => setWalkInForm({...walkInForm, walkInEmail: e.target.value})}
                   placeholder='customer@gmail.com'
-                  className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 transition'
-                />
+                  className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 transition' />
               </div>
-
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>Priority Token</label>
                 <div className='flex gap-2 mb-3'>
@@ -428,17 +394,14 @@ export default function StaffPanelPage() {
                 {walkInForm.isPriority && (
                   <select value={walkInForm.priorityReason}
                     onChange={e => setWalkInForm({...walkInForm, priorityReason: e.target.value})}
-                    className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-purple-400 transition'
-                  >
+                    className='w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-purple-400 transition'>
                     <option value=''>Select reason...</option>
                     {PRIORITY_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 )}
               </div>
             </div>
-
             {walkInError && <p className='text-red-500 text-sm mt-4'>{walkInError}</p>}
-
             <div className='flex gap-3 mt-6'>
               <button onClick={() => { setShowWalkIn(false); setWalkInError(''); }}
                 className='flex-1 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition'>
