@@ -13,6 +13,15 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+const COUNTERS = [
+  { id: 1, name: 'Counter 1', label: 'Cash', services: ['Cash Deposit'] },
+  { id: 2, name: 'Counter 2', label: 'Account & Inquiry', services: ['Account Opening', 'General Inquiry', 'Document Submission'] },
+  { id: 3, name: 'Counter 3', label: 'Loans & Cards', services: ['Loan Inquiry', 'Card Services'] },
+];
+
+function getCounterForService(serviceName) {
+  return COUNTERS.find(c => c.services.includes(serviceName)) || COUNTERS[0];
+}
 
 const STATUS_CONFIG = {
   HELD: {
@@ -308,9 +317,15 @@ export default function TrackerPage() {
             <span className="text-sm text-gray-400">Branch</span>
             <span className="text-sm font-medium text-gray-800">{token.branchId?.name || '--'}</span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-gray-400">Service</span>
             <span className="text-sm font-medium text-gray-800">{token.serviceName}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-400">Counter</span>
+            <span className="text-sm font-medium text-blue-900">
+              {getCounterForService(token.serviceName).name} — {getCounterForService(token.serviceName).label}
+            </span>
           </div>
         </div>
 
