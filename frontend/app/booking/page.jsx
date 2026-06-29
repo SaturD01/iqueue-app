@@ -239,8 +239,10 @@ export default function BookingPage() {
                     />
                     {errors.arrivalTime && <p className='text-red-500 text-xs mt-1'>{errors.arrivalTime}</p>}
                     <div className='bg-yellow-50 border border-yellow-200 rounded-xl p-3 mt-3 text-sm text-yellow-700'>
-                      Your token is safely held until your arrival time.
+                      Your token is safely held until your selected arrival time.
                       You will not be marked no-show while on your way.
+                      Once your arrival time is reached, your token will join the live queue
+                      and will be called in booking order alongside other customers.
                     </div>
                   </div>
                 )}
