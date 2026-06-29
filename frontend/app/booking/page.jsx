@@ -74,8 +74,19 @@ export default function BookingPage() {
     const newErrors = {};
     if (!form.branch) newErrors.branch = 'Please select a branch';
     if (!form.service) newErrors.service = 'Please select a service type';
-    if (form.arrivalType === 'later' && !form.arrivalTime)
-      newErrors.arrivalTime = 'Please select your arrival time';
+    if (form.arrivalType === 'later') {
+      if (!form.arrivalTime) {
+        newErrors.arrivalTime = 'Please select your arrival time';
+      } else {
+        const selected = new Date(form.arrivalTime);
+        const hours = selected.getHours();
+        const minutes = selected.getMinutes();
+        const totalMinutes = hours * 60 + minutes;
+        if (totalMinutes < 8 * 60 + 30 || totalMinutes > 15 * 60) {
+          newErrors.arrivalTime = 'Please select a time between 8:30 AM and 3:00 PM';
+        }
+      }
+    }
     return newErrors;
   };
 
