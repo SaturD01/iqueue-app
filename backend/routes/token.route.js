@@ -95,7 +95,7 @@ router.get('/queue', verifyToken, async (req, res) => {
 
     const tokens = await Token.find({
       branchId,
-      status: { $in: ['CALLABLE', 'HELD', 'CALLED', 'PRIORITY'] },
+      status: { $in: ['CALLABLE', 'CALLED', 'PRIORITY'] },
     })
       .populate('customerId', 'name phone noShowCount totalVisits')
       .sort({ position: 1 });
