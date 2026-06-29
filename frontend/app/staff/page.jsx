@@ -30,7 +30,6 @@ export default function StaffPanelPage() {
   const [branchId, setBranchId] = useState('');
   const [branchName, setBranchName] = useState('');
 
-  // Walk-in form state
   const [showWalkIn, setShowWalkIn] = useState(false);
   const [walkInForm, setWalkInForm] = useState({
     walkInName: '', serviceName: '', walkInEmail: '',
@@ -40,7 +39,6 @@ export default function StaffPanelPage() {
   const [walkInError, setWalkInError] = useState('');
   const [printSlip, setPrintSlip] = useState(null);
 
-  // Auth guard
   useEffect(() => {
     const token = localStorage.getItem('iqueue_token');
     if (!token) { router.push('/login'); return; }
@@ -48,11 +46,10 @@ export default function StaffPanelPage() {
     if (user.role !== 'staff') { router.push('/login'); return; }
     if (user.branchId) {
       setBranchId(user.branchId);
-      setBranchName(user.branchName || 'Your Branch');
+      setBranchName(user.branchName || 'Colombo Fort Branch');
     }
   }, []);
 
-  // Fetch queue — also clears calledToken if cron auto-marked it NO_SHOW
   const fetchQueue = useCallback(async () => {
     if (!branchId) return;
     try {
@@ -62,9 +59,7 @@ export default function StaffPanelPage() {
       setQueue(tokens);
       setCalledToken(prev => {
         if (!prev) return null;
-        const stillActive = tokens.find(
-          t => t._id === prev._id && t.status === 'CALLED'
-        );
+        const stillActive = tokens.find(t => t._id === prev._id && t.status === 'CALLED');
         return stillActive || null;
       });
     } catch (err) {
@@ -144,27 +139,106 @@ export default function StaffPanelPage() {
   return (
     <div className='min-h-screen bg-gray-50'>
 
-      {/* Print slip */}
+      {/* Print CSS — hides everything except slip on print */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          #print-slip, #print-slip * { visibility: visible !important; }
+          #print-slip {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 40px !important;
+          }
+        }
+      `}</style>
+
+      {/* Print slip — hidden on screen, shown on print */}
       {printSlip && (
-        <div className='print-only fixed inset-0 bg-white z-50 flex items-center justify-center'
-             style={{ display: 'none' }}>
-          <div style={{ fontFamily: 'Arial', textAlign: 'center', padding: '40px', border: '2px solid #1F4E79', borderRadius: '12px', maxWidth: '320px' }}>
-            <h1 style={{ color: '#1F4E79', fontSize: '28px', margin: '0 0 8px' }}>iQueue</h1>
-            <p style={{ color: '#888', fontSize: '12px', margin: '0 0 24px' }}>Smart Bank Queue Management</p>
-            <p style={{ color: '#555', fontSize: '14px', margin: '0 0 8px' }}>Your Token Number</p>
-            <p style={{ color: '#1F4E79', fontSize: '72px', fontWeight: '900', margin: '0 0 8px', fontFamily: 'monospace' }}>{printSlip.tokenNumber}</p>
-            <p style={{ color: '#555', fontSize: '14px', margin: '0 0 4px' }}>{printSlip.serviceName}</p>
-            {printSlip.isWalkIn && printSlip.priorityReason && (
-              <p style={{ color: '#5B21B6', fontSize: '12px', margin: '0 0 16px' }}>Priority: {printSlip.priorityReason}</p>
-            )}
-            <p style={{ color: '#333', fontSize: '13px', marginTop: '16px', borderTop: '1px solid #ddd', paddingTop: '16px' }}>
-              Please watch the display screen.
+        <div id='print-slip' style={{ display: 'none' }}>
+          <div style={{
+            fontFamily: 'Arial, sans-serif',
+            textAlign: 'center',
+            padding: '40px 32px',
+            border: '3px solid #1e3a5f',
+            borderRadius: '16px',
+            maxWidth: '340px',
+            width: '100%',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+          }}>
+            {/* Logo */}
+            <div style={{ marginBottom: '4px' }}>
+              <span style={{ fontSize: '32px', fontWeight: '900', color: '#1e3a5f', letterSpacing: '-1px' }}>iQueue</span>
+            </div>
+            <p style={{ color: '#888', fontSize: '11px', margin: '0 0 6px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              Smart Bank Queue Management
             </p>
-            <p style={{ color: '#333', fontSize: '13px' }}>
+            <p style={{ color: '#aaa', fontSize: '11px', margin: '0 0 24px' }}>
+              {branchName}
+            </p>
+
+            {/* Divider */}
+            <div style={{ borderTop: '1px dashed #ddd', margin: '0 0 24px' }}></div>
+
+            {/* Token number */}
+            <p style={{ color: '#555', fontSize: '12px', margin: '0 0 4px', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              Your Token Number
+            </p>
+            <p style={{ color: '#1e3a5f', fontSize: '88px', fontWeight: '900', margin: '0 0 4px', fontFamily: 'monospace', lineHeight: 1 }}>
+              {printSlip.tokenNumber}
+            </p>
+
+            {/* Priority badge */}
+            {printSlip.priorityReason && (
+              <div style={{
+                display: 'inline-block',
+                background: '#f3e8ff',
+                color: '#6b21a8',
+                fontSize: '12px',
+                fontWeight: '700',
+                padding: '4px 14px',
+                borderRadius: '99px',
+                margin: '8px 0 0',
+                letterSpacing: '0.5px',
+              }}>
+                ★ PRIORITY — {printSlip.priorityReason.toUpperCase()}
+              </div>
+            )}
+
+            {/* Service */}
+            <p style={{ color: '#444', fontSize: '14px', margin: '16px 0 0', fontWeight: '600' }}>
+              {printSlip.serviceName}
+            </p>
+
+            {/* Customer name */}
+            {printSlip.walkInName && (
+              <p style={{ color: '#888', fontSize: '12px', margin: '4px 0 0' }}>
+                {printSlip.walkInName}
+              </p>
+            )}
+
+            {/* Divider */}
+            <div style={{ borderTop: '1px dashed #ddd', margin: '20px 0' }}></div>
+
+            {/* Instructions */}
+            <p style={{ color: '#333', fontSize: '12px', margin: '0 0 6px', lineHeight: '1.6' }}>
+              Please watch the display screen.<br />
+              Proceed to the counter when your number is called.
+            </p>
+            <p style={{ color: '#e74c3c', fontSize: '12px', fontWeight: '600', margin: '0 0 16px' }}>
               You have 5 minutes to reach the counter when called.
             </p>
-            <p style={{ color: '#888', fontSize: '11px', marginTop: '16px' }}>
-              {new Date().toLocaleString('en-LK')}
+
+            {/* Date/time */}
+            <p style={{ color: '#bbb', fontSize: '10px', margin: '0', letterSpacing: '0.5px' }}>
+              {new Date().toLocaleString('en-LK', {
+                year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit',
+              })}
             </p>
           </div>
         </div>
@@ -236,7 +310,6 @@ export default function StaffPanelPage() {
       {actionError && <div className='bg-orange-50 border-b border-orange-200 text-orange-600 text-sm px-6 py-3'>{actionError}</div>}
 
       <div className='p-6'>
-        {/* Stats */}
         <div className='grid grid-cols-3 gap-4 mb-6'>
           <div className='bg-white rounded-xl border border-gray-200 p-4 text-center'>
             <p className='text-2xl font-bold text-blue-900'>{activeTokens.length}</p>
@@ -252,7 +325,6 @@ export default function StaffPanelPage() {
           </div>
         </div>
 
-        {/* Token table */}
         {activeTokens.length === 0 ? (
           <div className='bg-white rounded-xl border border-gray-200 p-12 text-center'>
             <p className='text-gray-400 text-lg'>No tokens in queue</p>
