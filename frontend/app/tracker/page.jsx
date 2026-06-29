@@ -166,6 +166,12 @@ export default function TrackerPage() {
     return `${m}:${String(s).padStart(2, '0')}`;
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('iqueue_token');
+    localStorage.removeItem('iqueue_user');
+    router.push('/login');
+  };
+
   const handleCancelToken = async () => {
     if (!token) return;
     setCancelError('');
@@ -218,9 +224,12 @@ export default function TrackerPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white rounded-2xl border border-gray-200 p-8 w-full max-w-md text-center">
           <p className="text-red-500 font-semibold mb-4">{error}</p>
-          <a href="/booking" className="block w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition">
+          <a href="/booking" className="block w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition mb-3">
             Book a Token
           </a>
+          <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-red-500 font-medium transition">
+            Logout
+          </button>
         </div>
       </div>
     );
@@ -232,11 +241,21 @@ export default function TrackerPage() {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-md mx-auto">
 
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-blue-900">iQueue</h1>
-          <p className="text-gray-400 text-sm mt-1">Live Queue Tracker</p>
+        {/* Header with logout */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-blue-900">iQueue</h1>
+            <p className="text-gray-400 text-sm mt-1">Live Queue Tracker</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-gray-400 hover:text-red-500 font-medium transition"
+          >
+            Logout
+          </button>
         </div>
 
+        {/* Token number card */}
         <div className={`rounded-2xl border-2 p-6 mb-4 text-center ${config.bg} ${config.border}`}>
           <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Your Token</p>
           <p className="text-7xl font-bold text-blue-900 mb-3">{token.tokenNumber}</p>
@@ -246,6 +265,7 @@ export default function TrackerPage() {
           </span>
         </div>
 
+        {/* CALLED countdown timer */}
         {token.status === 'CALLED' && (
           <div className={`rounded-2xl border-2 p-4 mb-4 text-center ${countdown <= 60 ? 'bg-red-50 border-red-400' : 'bg-green-50 border-green-400'}`}>
             <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Time Remaining</p>
@@ -258,11 +278,13 @@ export default function TrackerPage() {
           </div>
         )}
 
+        {/* Status message */}
         <div className={`rounded-2xl border-2 p-4 mb-4 ${config.bg} ${config.border}`}>
           <p className="font-semibold text-gray-800">{config.message}</p>
           <p className="text-sm text-gray-500 mt-1">{config.sub}</p>
         </div>
 
+        {/* Queue stats */}
         {!TERMINAL_STATUSES.includes(token.status) && token.status !== 'CALLED' && (
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
@@ -280,6 +302,7 @@ export default function TrackerPage() {
           </div>
         )}
 
+        {/* Branch and service info */}
         <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-gray-400">Branch</span>
@@ -291,6 +314,7 @@ export default function TrackerPage() {
           </div>
         </div>
 
+        {/* Cancel token button */}
         {CANCELLABLE_STATUSES.includes(token.status) && (
           <div className="mb-4">
             {cancelError && (
@@ -306,6 +330,7 @@ export default function TrackerPage() {
           </div>
         )}
 
+        {/* Book new token CTA */}
         {TERMINAL_STATUSES.includes(token.status) && (
           <div className="mb-4">
             <a
@@ -317,6 +342,7 @@ export default function TrackerPage() {
           </div>
         )}
 
+        {/* Live indicator */}
         {!TERMINAL_STATUSES.includes(token.status) && (
           <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mb-6">
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
@@ -324,6 +350,7 @@ export default function TrackerPage() {
           </div>
         )}
 
+        {/* Star rating */}
         {token.status === 'SERVED' && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center mb-4">
             <p className="font-semibold text-gray-800 mb-1">How was your experience?</p>
@@ -348,6 +375,7 @@ export default function TrackerPage() {
           </div>
         )}
 
+        {/* Demo status buttons */}
         <div className="bg-white rounded-2xl border border-gray-200 p-4">
           <p className="text-xs text-gray-400 uppercase tracking-widest mb-3 text-center">
             Demo — Switch Status
@@ -373,4 +401,3 @@ export default function TrackerPage() {
     </div>
   );
 }
-
