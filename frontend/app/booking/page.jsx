@@ -62,10 +62,11 @@ export default function BookingPage() {
   };
 
   const getMaxTime = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+    const future = new Date();
+    future.setDate(future.getDate() + 30);
+    const year = future.getFullYear();
+    const month = String(future.getMonth() + 1).padStart(2, '0');
+    const day = String(future.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}T15:00`;
   };
 

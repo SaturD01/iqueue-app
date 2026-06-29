@@ -1,6 +1,6 @@
 /**
  * @file cron.service.js
- * @description Automated no-show scheduler and daily stale token reset.
+ * @description Automated no-show scheduler, HELD to CALLABLE transition, and daily stale token reset.
  * @author M1 — WDD Wickramaratne (22UG3-0550)
  * @created 2026-04-14
  * @updated 2026-06-29
@@ -51,7 +51,42 @@ const startCronJobs = () => {
     }
   });
 
-  // ── Job 2: Daily stale token reset — runs every day at 3:30 PM ────────
+  // ── Job 2: HELD → CALLABLE transition — runs every 60 seconds ─────────
+  cron.schedule('* * * * *', async () => {
+    try {
+      const Token = require('../models/Token');
+      const socketService = require('./socket.service');
+
+      const now = new Date();
+      const heldTokens = await Token.find({
+        status: 'HELD',
+        arrivalTime: { $lte: now },
+      });
+
+      if (heldTokens.length === 0) return;
+
+      console.log(`HELD→CALLABLE cron: transitioning ${heldTokens.length} token(s)`);
+
+      for (const token of heldTokens) {
+        token.status = 'CALLABLE';
+        await token.save();
+
+        console.log(`Token ${token.tokenNumber} transitioned HELD → CALLABLE`);
+
+        const updatedQueue = await Token.find({
+          branchId: token.branchId,
+          status: { $in: ['CALLABLE', 'CALLED', 'PRIORITY'] },
+        }).sort({ position: 1 });
+
+        socketService.emitQueueUpdated(token.branchId.toString(), updatedQueue);
+      }
+    } catch (error) {
+      if (error.message.includes('Cannot find module')) return;
+      console.error('HELD transition cron error:', error.message);
+    }
+  });
+
+  // ── Job 3: Daily stale token reset — runs every day at 3:30 PM ────────
   cron.schedule('30 15 * * *', async () => {
     try {
       const Token = require('../models/Token');
@@ -68,7 +103,6 @@ const startCronJobs = () => {
 
       console.log(`Daily reset: expiring ${staleTokens.length} stale token(s)`);
 
-      // Group by branch for socket emissions
       const branchIds = [...new Set(staleTokens.map(t => t.branchId.toString()))];
 
       await Token.updateMany(
@@ -76,7 +110,6 @@ const startCronJobs = () => {
         { status: 'CANCELLED', cancelledAt: new Date() }
       );
 
-      // Emit queue:updated to each affected branch
       for (const branchId of branchIds) {
         const updatedQueue = await Token.find({
           branchId,
@@ -93,7 +126,7 @@ const startCronJobs = () => {
     }
   });
 
-  console.log('Cron jobs started — no-show scheduler (60s) + daily reset (15:30) active');
+  console.log('Cron jobs started — no-show (60s) + HELD transition (60s) + daily reset (15:30) active');
 };
 
 module.exports = { startCronJobs };
