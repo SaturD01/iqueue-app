@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import api from '@/lib/api';
 
 const SERVICES = [
@@ -25,15 +24,11 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(false);
   const [bookedToken, setBookedToken] = useState(null);
 
-  // Auth guard
   useEffect(() => {
     const token = localStorage.getItem('iqueue_token');
-    if (!token) {
-      router.push('/login');
-    }
+    if (!token) router.push('/login');
   }, []);
 
-  // Fetch real branches
   useEffect(() => {
     const fetchBranches = async () => {
       try {
@@ -45,6 +40,12 @@ export default function BookingPage() {
     };
     fetchBranches();
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('iqueue_token');
+    localStorage.removeItem('iqueue_user');
+    router.push('/login');
+  };
 
   const getMinTime = () => {
     const now = new Date();
@@ -86,10 +87,7 @@ export default function BookingPage() {
     }
     setLoading(true);
     try {
-      const body = {
-        branchId: form.branch,
-        serviceName: form.service,
-      };
+      const body = { branchId: form.branch, serviceName: form.service };
       if (form.arrivalType === 'later' && form.arrivalTime) {
         body.arrivalTime = form.arrivalTime;
       }
@@ -119,9 +117,12 @@ export default function BookingPage() {
               You will not be marked no-show while on your way.
             </div>
           )}
-          <a href='/tracker' className='block w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition'>
+          <a href='/tracker' className='block w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition mb-3'>
             Track My Queue Position
           </a>
+          <button onClick={handleLogout} className='text-sm text-gray-400 hover:text-red-500 font-medium transition'>
+            Logout
+          </button>
         </div>
       </div>
     );
@@ -131,12 +132,20 @@ export default function BookingPage() {
     <div className='min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8'>
       <div className='w-full max-w-md'>
 
-        {/* Header */}
-        <div className='text-center mb-8'>
-          <div className='inline-block bg-blue-900 text-white px-6 py-2 rounded-xl mb-3'>
-            <h1 className='text-2xl font-bold'>iQueue</h1>
+        {/* Header with logout */}
+        <div className='flex items-start justify-between mb-8'>
+          <div className='flex-1 text-center'>
+            <div className='inline-block bg-blue-900 text-white px-6 py-2 rounded-xl mb-3'>
+              <h1 className='text-2xl font-bold'>iQueue</h1>
+            </div>
+            <p className='text-gray-400 text-sm'>Skip the queue. Bank smarter.</p>
           </div>
-          <p className='text-gray-400 text-sm'>Skip the queue. Bank smarter.</p>
+          <button
+            onClick={handleLogout}
+            className='text-sm text-gray-400 hover:text-red-500 font-medium transition ml-4'
+          >
+            Logout
+          </button>
         </div>
 
         {/* Card */}
@@ -206,7 +215,6 @@ export default function BookingPage() {
                     Later
                   </button>
                 </div>
-
                 {form.arrivalType === 'later' && (
                   <div>
                     <input
