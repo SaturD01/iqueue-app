@@ -72,9 +72,9 @@ export default function RegisterPage() {
           <div className='w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4'>
             <span className='text-3xl'>✓</span>
           </div>
-          <h2 className='text-2xl font-bold text-blue-900 mb-2'>Account Created!</h2>
+          <h2 className='text-2xl font-bold text-brand-navy mb-2'>Account Created!</h2>
           <p className='text-gray-500 mb-6'>Your iQueue account has been created successfully.</p>
-          <a href='/login' className='block w-full bg-blue-900 text-white py-3 rounded-xl font-semibold text-center hover:bg-blue-800 transition'>
+          <a href='/login' className='block w-full bg-brand-navy text-white py-3 rounded-xl font-semibold text-center hover:bg-blue-800 transition'>
             Go to Login
           </a>
         </div>
@@ -88,7 +88,7 @@ export default function RegisterPage() {
 
         {/* Header */}
         <div className='text-center mb-8'>
-          <div className='inline-block bg-blue-900 text-white px-6 py-2 rounded-xl mb-3'>
+          <div className='inline-block bg-brand-navy text-white px-6 py-2 rounded-xl mb-3'>
             <h1 className='text-2xl font-bold'>iQueue</h1>
           </div>
           <p className='text-gray-400 text-sm'>Skip the queue. Bank smarter.</p>
@@ -96,7 +96,7 @@ export default function RegisterPage() {
 
         {/* Card */}
         <div className='bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden'>
-          <div className='h-1.5 bg-blue-900'></div>
+          <div className='h-1.5 bg-brand-navy'></div>
           <div className='p-8'>
             <h2 className='text-xl font-bold text-gray-800 mb-6'>Create your account</h2>
             <form onSubmit={handleSubmit} className='space-y-4'>
@@ -165,7 +165,7 @@ export default function RegisterPage() {
               {/* Submit */}
               <button
                 type='submit' disabled={loading}
-                className='w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2 mt-2'
+                className='w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2 mt-2'
               >
                 {loading && <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>}
                 {loading ? 'Creating account...' : 'Create Account'}

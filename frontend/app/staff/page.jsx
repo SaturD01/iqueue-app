@@ -204,7 +204,7 @@ export default function StaffPanelPage() {
       )}
 
       {/* Header */}
-      <div className='bg-blue-900 text-white px-6 py-4 flex items-center justify-between'>
+      <div className='bg-brand-navy text-white px-6 py-4 flex items-center justify-between'>
         <div>
           <h1 className='text-xl font-bold'>iQueue</h1>
           <p className='text-blue-300 text-sm'>Staff Queue Panel</p>
@@ -215,7 +215,7 @@ export default function StaffPanelPage() {
             + Walk-in
           </button>
           <button onClick={handleCallNext} disabled={loading}
-            className='bg-white text-blue-900 px-5 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition disabled:opacity-60'>
+            className='bg-white text-brand-navy px-5 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition disabled:opacity-60'>
             {loading ? 'Loading...' : 'Call Next'}
           </button>
         </div>
@@ -223,7 +223,7 @@ export default function StaffPanelPage() {
 
       {/* Called notification */}
       {calledToken && (
-        <div className='bg-green-500 text-white text-center py-3 font-semibold'>
+        <div className='bg-brand-teal text-white text-center py-3 font-semibold'>
           Now calling: {calledToken.tokenNumber} — {calledToken.serviceName}
           <span className='ml-2 text-green-100 text-sm'>({getCounterForService(calledToken.serviceName).name})</span>
           <div className='flex justify-center gap-3 mt-2'>
@@ -314,7 +314,7 @@ export default function StaffPanelPage() {
                 {counterTokens.map(token => (
                   <tr key={token._id} className='hover:bg-gray-50 transition'>
                     <td className='px-4 py-4'>
-                      <span className='font-bold text-blue-900'>{token.tokenNumber}</span>
+                      <span className='font-bold text-brand-navy'>{token.tokenNumber}</span>
                       {token.isWalkIn && <span className='ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full'>Walk-in</span>}
                     </td>
                     <td className='px-4 py-4'><span className='text-sm text-gray-500'>{token.serviceName}</span></td>
@@ -382,7 +382,7 @@ export default function StaffPanelPage() {
                 <div className='flex gap-2 mb-3'>
                   <button type='button'
                     onClick={() => setWalkInForm({...walkInForm, isPriority: false, priorityReason: ''})}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition ${!walkInForm.isPriority ? 'bg-blue-900 text-white border-blue-900' : 'bg-white text-gray-600 border-gray-200'}`}>
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition ${!walkInForm.isPriority ? 'bg-brand-navy text-white border-brand-navy' : 'bg-white text-gray-600 border-gray-200'}`}>
                     Normal
                   </button>
                   <button type='button'

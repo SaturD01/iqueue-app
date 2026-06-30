@@ -12,7 +12,7 @@ const COUNTERS = [
 ];
 
 const COUNTER_COLORS = {
-  blue:   { bg: 'bg-blue-800',   border: 'border-blue-500',   header: 'bg-blue-700',   text: 'text-blue-300' },
+  blue:   { bg: 'bg-brand-navy-light',   border: 'border-blue-500',   header: 'bg-brand-navy-light',   text: 'text-blue-300' },
   teal:   { bg: 'bg-teal-800',   border: 'border-teal-500',   header: 'bg-teal-700',   text: 'text-teal-300' },
   indigo: { bg: 'bg-indigo-800', border: 'border-indigo-500', header: 'bg-indigo-700', text: 'text-indigo-300' },
 };
@@ -96,10 +96,10 @@ export default function TVDisplayPage() {
   }, [branchId, fetchQueue]);
 
   return (
-    <div className='min-h-screen bg-blue-900 flex flex-col overflow-hidden'>
+    <div className='min-h-screen bg-brand-navy flex flex-col overflow-hidden'>
 
       {/* Top bar */}
-      <div className='flex items-center justify-between px-8 py-4 border-b border-blue-800'>
+      <div className='flex items-center justify-between px-8 py-4 border-b border-brand-navy-light'>
         <div className='flex items-center gap-3'>
           <span className='text-white font-bold text-2xl'>iQueue</span>
           <span className='text-blue-400 text-sm'>Smart Bank Queue Management</span>
@@ -111,7 +111,7 @@ export default function TVDisplayPage() {
       </div>
 
       {/* 3 Counter Columns */}
-      <div className='flex-1 grid grid-cols-3 gap-0 divide-x divide-blue-800'>
+      <div className='flex-1 grid grid-cols-3 gap-0 divide-x divide-brand-navy-light'>
         {COUNTERS.map(counter => {
           const colors = COUNTER_COLORS[counter.color];
           const { nowServing, upNext } = counterData[counter.id];
@@ -119,7 +119,7 @@ export default function TVDisplayPage() {
             <div key={counter.id} className='flex flex-col'>
 
               {/* Counter Header */}
-              <div className={`${colors.header} px-6 py-4 text-center border-b border-blue-800`}>
+              <div className={`${colors.header} px-6 py-4 text-center border-b border-brand-navy-light`}>
                 <p className='text-white font-bold text-lg'>{counter.name}</p>
                 <p className={`${colors.text} text-sm`}>{counter.label}</p>
               </div>
@@ -143,7 +143,7 @@ export default function TVDisplayPage() {
                     )}
                   </>
                 ) : (
-                  <p className='font-black text-blue-700 leading-none'
+                  <p className='font-black text-brand-navy-light leading-none'
                      style={{ fontSize: 'clamp(40px, 7vw, 80px)' }}>
                     ---
                   </p>
@@ -151,18 +151,18 @@ export default function TVDisplayPage() {
               </div>
 
               {/* Divider */}
-              <div className='border-t border-blue-800 mx-6'></div>
+              <div className='border-t border-brand-navy-light mx-6'></div>
 
               {/* UP NEXT */}
               <div className='px-6 py-4'>
                 <p className={`${colors.text} text-xs uppercase tracking-widest mb-3 text-center`}>Up Next</p>
                 {upNext.length === 0 ? (
-                  <p className='text-blue-700 text-center text-sm py-2'>No tokens waiting</p>
+                  <p className='text-brand-navy-light text-center text-sm py-2'>No tokens waiting</p>
                 ) : (
                   <div className='space-y-2'>
                     {upNext.slice(0, 3).map((token, index) => (
                       <div key={token._id}
-                        className={`rounded-xl p-3 text-center ${index === 0 ? `${colors.bg} border ${colors.border}` : 'bg-blue-800'}`}>
+                        className={`rounded-xl p-3 text-center ${index === 0 ? `${colors.bg} border ${colors.border}` : 'bg-brand-navy-light'}`}>
                         <p className={`font-bold text-white ${index === 0 ? 'text-2xl' : 'text-xl'}`}>
                           {token.tokenNumber}
                         </p>
@@ -186,7 +186,7 @@ export default function TVDisplayPage() {
       </div>
 
       {/* Footer */}
-      <div className='px-8 py-3 text-center border-t border-blue-800'>
+      <div className='px-8 py-3 text-center border-t border-brand-navy-light'>
         <p className='text-blue-500 text-xs'>
           Please proceed to your assigned counter when your token is called — iQueue Smart Bank Queue Management
         </p>

@@ -111,7 +111,7 @@ export default function AdminPage() {
     <div className='min-h-screen bg-gray-50'>
 
       {/* Header */}
-      <div className='bg-blue-900 px-6 py-4 flex items-center justify-between'>
+      <div className='bg-brand-navy px-6 py-4 flex items-center justify-between'>
         <div>
           <h1 className='text-xl font-bold text-white'>iQueue Admin Panel</h1>
           <p className='text-blue-300 text-xs mt-0.5'>User Management</p>
@@ -145,7 +145,7 @@ export default function AdminPage() {
         <div className='grid grid-cols-4 gap-3 mb-6'>
           {ROLES.map(role => (
             <div key={role} className='bg-white rounded-xl border border-gray-200 p-4 text-center'>
-              <p className='text-2xl font-bold text-blue-900'>
+              <p className='text-2xl font-bold text-brand-navy'>
                 {users.filter(u => u.role === role).length}
               </p>
               <p className='text-xs text-gray-400 mt-1 capitalize'>{role}s</p>
@@ -156,7 +156,7 @@ export default function AdminPage() {
         {/* Users table */}
         {loading ? (
           <div className='flex items-center justify-center py-20'>
-            <div className='w-10 h-10 border-4 border-blue-900 border-t-transparent rounded-full animate-spin'></div>
+            <div className='w-10 h-10 border-4 border-brand-navy border-t-transparent rounded-full animate-spin'></div>
           </div>
         ) : (
           <div className='bg-white rounded-2xl border border-gray-200 overflow-hidden'>
@@ -173,7 +173,7 @@ export default function AdminPage() {
                   <div key={user._id} className='px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition'>
                     <div className='flex-1 min-w-0'>
                       <div className='flex items-center gap-3'>
-                        <div className='w-9 h-9 rounded-full bg-blue-900 flex items-center justify-center flex-shrink-0'>
+                        <div className='w-9 h-9 rounded-full bg-brand-navy flex items-center justify-center flex-shrink-0'>
                           <span className='text-white text-sm font-bold'>
                             {user.name?.charAt(0).toUpperCase()}
                           </span>
@@ -193,7 +193,7 @@ export default function AdminPage() {
                       </span>
                       <button
                         onClick={() => openEdit(user)}
-                        className='text-xs font-semibold text-blue-700 hover:text-blue-900 border border-blue-200 hover:border-blue-400 px-3 py-1.5 rounded-lg transition'
+                        className='text-xs font-semibold text-blue-700 hover:text-brand-navy border border-blue-200 hover:border-blue-400 px-3 py-1.5 rounded-lg transition'
                       >
                         Edit
                       </button>
@@ -260,7 +260,7 @@ export default function AdminPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className='flex-1 py-3 rounded-xl bg-blue-900 text-white text-sm font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2'
+                className='flex-1 py-3 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2'
               >
                 {saving && <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>}
                 {saving ? 'Saving...' : 'Save Changes'}

@@ -49,7 +49,7 @@ export default function LoginPage() {
 
         {/* Header */}
         <div className='text-center mb-8'>
-          <div className='inline-block bg-blue-900 text-white px-6 py-2 rounded-xl mb-3'>
+          <div className='inline-block bg-brand-navy text-white px-6 py-2 rounded-xl mb-3'>
             <h1 className='text-2xl font-bold'>iQueue</h1>
           </div>
           <p className='text-gray-400 text-sm'>Skip the queue. Bank smarter.</p>
@@ -57,7 +57,7 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className='bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden'>
-          <div className='h-1.5 bg-blue-900'></div>
+          <div className='h-1.5 bg-brand-navy'></div>
           <div className='p-8'>
             <h2 className='text-xl font-bold text-gray-800 mb-6'>Welcome back</h2>
 
@@ -92,7 +92,7 @@ export default function LoginPage() {
               {/* Submit */}
               <button
                 type='submit' disabled={loading}
-                className='w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2 mt-2'
+                className='w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2 mt-2'
               >
                 {loading && <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>}
                 {loading ? 'Signing in...' : 'Sign In'}

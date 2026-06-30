@@ -130,7 +130,7 @@ export default function BookingPage() {
             <span className='text-3xl'>✓</span>
           </div>
           <p className='text-sm text-gray-400 uppercase tracking-widest mb-2'>Your Token</p>
-          <p className='text-6xl font-bold text-blue-900 mb-2'>{bookedToken}</p>
+          <p className='text-6xl font-bold text-brand-navy mb-2'>{bookedToken}</p>
           <p className='text-gray-500 text-sm mb-6'>{form.service}</p>
           {form.arrivalType === 'later' && (
             <div className='bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-6 text-sm text-yellow-700'>
@@ -138,7 +138,7 @@ export default function BookingPage() {
               You will not be marked no-show while on your way.
             </div>
           )}
-          <a href='/tracker' className='block w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition mb-3'>
+          <a href='/tracker' className='block w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition mb-3'>
             Track My Queue Position
           </a>
           <button onClick={handleLogout} className='text-sm text-gray-400 hover:text-red-500 font-medium transition'>
@@ -156,7 +156,7 @@ export default function BookingPage() {
         {/* Header with logout */}
         <div className='flex items-start justify-between mb-8'>
           <div className='flex-1 text-center'>
-            <div className='inline-block bg-blue-900 text-white px-6 py-2 rounded-xl mb-3'>
+            <div className='inline-block bg-brand-navy text-white px-6 py-2 rounded-xl mb-3'>
               <h1 className='text-2xl font-bold'>iQueue</h1>
             </div>
             <p className='text-gray-400 text-sm'>Skip the queue. Bank smarter.</p>
@@ -171,7 +171,7 @@ export default function BookingPage() {
 
         {/* Card */}
         <div className='bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden'>
-          <div className='h-1.5 bg-blue-900'></div>
+          <div className='h-1.5 bg-brand-navy'></div>
           <div className='p-8'>
             <h2 className='text-xl font-bold text-gray-800 mb-1'>Book Your Token</h2>
             <p className='text-xs text-gray-400 mb-6'>Banking hours: 8:30 AM — 3:00 PM</p>
@@ -230,13 +230,13 @@ export default function BookingPage() {
                 <div className='flex gap-2 mb-3'>
                   <button type='button'
                     onClick={() => setForm({ ...form, arrivalType: 'now', arrivalTime: '' })}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition ${form.arrivalType === 'now' ? 'bg-blue-900 text-white border-blue-900' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'}`}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition ${form.arrivalType === 'now' ? 'bg-brand-navy text-white border-brand-navy' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'}`}
                   >
                     Now
                   </button>
                   <button type='button'
                     onClick={() => setForm({ ...form, arrivalType: 'later' })}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition ${form.arrivalType === 'later' ? 'bg-blue-900 text-white border-blue-900' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'}`}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition ${form.arrivalType === 'later' ? 'bg-brand-navy text-white border-brand-navy' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'}`}
                   >
                     Later
                   </button>
@@ -264,7 +264,7 @@ export default function BookingPage() {
               {/* Submit */}
               <button
                 type='submit' disabled={loading}
-                className='w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2'
+                className='w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2'
               >
                 {loading && <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>}
                 {loading ? 'Booking your token...' : 'Book My Token'}

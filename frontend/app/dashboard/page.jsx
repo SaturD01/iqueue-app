@@ -72,7 +72,7 @@ export default function ManagerDashboardPage() {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gray-50'>
         <div className='text-center'>
-          <div className='w-10 h-10 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
+          <div className='w-10 h-10 border-4 border-brand-navy border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-gray-400 text-sm'>Loading analytics...</p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function ManagerDashboardPage() {
     <div className='min-h-screen bg-gray-50'>
 
       {/* Header */}
-      <div className='bg-blue-900 text-white px-6 py-4'>
+      <div className='bg-brand-navy text-white px-6 py-4'>
         <h1 className='text-xl font-bold'>iQueue</h1>
         <p className='text-blue-300 text-sm'>Branch Analytics Dashboard</p>
       </div>
@@ -100,7 +100,7 @@ export default function ManagerDashboardPage() {
         <div className='grid grid-cols-3 gap-4 mb-6'>
           <div className='bg-white rounded-2xl border border-gray-200 p-5'>
             <p className='text-xs text-gray-400 uppercase tracking-wide mb-1'>Customers Served Today</p>
-            <p className='text-4xl font-bold text-blue-900'>{summary?.totalServed ?? '--'}</p>
+            <p className='text-4xl font-bold text-brand-navy'>{summary?.totalServed ?? '--'}</p>
           </div>
           <div className='bg-white rounded-2xl border border-gray-200 p-5'>
             <p className='text-xs text-gray-400 uppercase tracking-wide mb-1'>No-Shows Today</p>
@@ -141,14 +141,14 @@ export default function ManagerDashboardPage() {
           <button
             onClick={handleAiAnalysis}
             disabled={loadingAi}
-            className='w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2'
+            className='w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2'
           >
             {loadingAi && (
               <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>
             )}
             {loadingAi ? 'Analysing...' : 'Run AI Analysis'}
           </button>
-          <div className={`mt-4 rounded-xl p-4 text-sm ${aiAnalysis ? 'bg-blue-50 border border-blue-200 text-blue-900' : 'bg-gray-50 border border-gray-200 text-gray-400'}`}>
+          <div className={`mt-4 rounded-xl p-4 text-sm ${aiAnalysis ? 'bg-blue-50 border border-blue-200 text-brand-navy' : 'bg-gray-50 border border-gray-200 text-gray-400'}`}>
             {aiAnalysis || 'AI analysis will appear here after you click Run AI Analysis.'}
           </div>
         </div>
