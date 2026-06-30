@@ -90,7 +90,7 @@ export default function LoginPage() {
               {/* Submit */}
               <button
                 type='submit' disabled={loading}
-                className='w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2 mt-2'
+                className='w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-brand-teal transition disabled:opacity-60 flex items-center justify-center gap-2 mt-2'
               >
                 {loading && <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>}
                 {loading ? 'Signing in...' : 'Sign In'}
@@ -107,3 +107,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

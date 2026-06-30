@@ -260,7 +260,7 @@ export default function AdminPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className='flex-1 py-3 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2'
+                className='flex-1 py-3 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-brand-teal transition disabled:opacity-60 flex items-center justify-center gap-2'
               >
                 {saving && <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>}
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -273,3 +273,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+

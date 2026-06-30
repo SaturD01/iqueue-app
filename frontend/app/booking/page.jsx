@@ -138,7 +138,7 @@ export default function BookingPage() {
               You will not be marked no-show while on your way.
             </div>
           )}
-          <a href='/tracker' className='block w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition mb-3'>
+          <a href='/tracker' className='block w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-brand-teal transition mb-3'>
             Track My Queue Position
           </a>
           <button onClick={handleLogout} className='text-sm text-gray-400 hover:text-red-500 font-medium transition'>
@@ -154,19 +154,17 @@ export default function BookingPage() {
       <div className='w-full max-w-md'>
 
         {/* Header with logout */}
-        <div className='flex items-start justify-between mb-8'>
-          <div className='flex-1 text-center'>
-            <div className='inline-block bg-brand-navy text-white px-6 py-2 rounded-xl mb-3'>
-              <h1 className='text-2xl font-bold'>iQueue</h1>
-            </div>
-            <p className='text-gray-400 text-sm'>Skip the queue. Bank smarter.</p>
-          </div>
+        <div className='relative mb-8'>
           <button
             onClick={handleLogout}
-            className='text-sm text-gray-400 hover:text-red-500 font-medium transition ml-4'
+            className='absolute top-0 right-0 text-sm text-gray-400 hover:text-red-500 font-medium transition'
           >
             Logout
           </button>
+          <div className='text-center'>
+            <img src='/logo.png' alt='iQueue' className='h-32 mx-auto mb-3' />
+            <p className='text-gray-400 text-sm'>The Line Ends Here</p>
+          </div>
         </div>
 
         {/* Card */}
@@ -264,7 +262,7 @@ export default function BookingPage() {
               {/* Submit */}
               <button
                 type='submit' disabled={loading}
-                className='w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2'
+                className='w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-brand-teal transition disabled:opacity-60 flex items-center justify-center gap-2'
               >
                 {loading && <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>}
                 {loading ? 'Booking your token...' : 'Book My Token'}
@@ -277,3 +275,4 @@ export default function BookingPage() {
     </div>
   );
 }
+

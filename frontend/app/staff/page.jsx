@@ -215,7 +215,7 @@ export default function StaffPanelPage() {
             + Walk-in
           </button>
           <button onClick={handleCallNext} disabled={loading}
-            className='bg-white text-brand-navy px-5 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition disabled:opacity-60'>
+            className='bg-white text-brand-navy px-5 py-2 rounded-xl font-bold text-sm hover:bg-brand-teal-light transition disabled:opacity-60'>
             {loading ? 'Loading...' : 'Call Next'}
           </button>
         </div>
@@ -419,3 +419,4 @@ export default function StaffPanelPage() {
     </div>
   );
 }
+

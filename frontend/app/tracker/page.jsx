@@ -233,7 +233,7 @@ export default function TrackerPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white rounded-2xl border border-gray-200 p-8 w-full max-w-md text-center">
           <p className="text-red-500 font-semibold mb-4">{error}</p>
-          <a href="/booking" className="block w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition mb-3">
+          <a href="/booking" className="block w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-brand-teal transition mb-3">
             Book a Token
           </a>
           <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-red-500 font-medium transition">
@@ -350,7 +350,7 @@ export default function TrackerPage() {
           <div className="mb-4">
             <a
               href="/booking"
-              className="block w-full py-3 rounded-xl bg-brand-navy text-white font-semibold text-center hover:bg-blue-800 transition"
+              className="block w-full py-3 rounded-xl bg-brand-navy text-white font-semibold text-center hover:bg-brand-teal transition"
             >
               Book a New Token
             </a>
@@ -416,5 +416,6 @@ export default function TrackerPage() {
     </div>
   );
 }
+
 
 
