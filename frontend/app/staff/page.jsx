@@ -204,10 +204,12 @@ export default function StaffPanelPage() {
       )}
 
       {/* Header */}
-      <div className='bg-brand-navy text-white px-6 py-4 flex items-center justify-between'>
-        <div>
-          <h1 className='text-xl font-bold'>iQueue</h1>
-          <p className='text-blue-300 text-sm'>Staff Queue Panel</p>
+      <div className='bg-brand-navy text-white px-6 py-3 flex items-center justify-between'>
+        <div className='flex items-center gap-3'>
+          <div className='bg-white rounded-lg px-3 py-1.5'>
+            <img src='/logo.png' alt='iQueue' className='h-7' />
+          </div>
+          <p className='text-blue-200 text-sm font-medium'>Staff Queue Panel</p>
         </div>
         <div className='flex items-center gap-3'>
           <button onClick={() => { setShowWalkIn(true); setPrintSlip(null); }}
@@ -343,7 +345,7 @@ export default function StaffPanelPage() {
 
       {/* Walk-in Modal */}
       {showWalkIn && (
-        <div className='fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center px-4 z-50'>
+        <div className='fixed inset-0 flex items-center justify-center px-4 z-50' style={{ backgroundColor: '#F9FAFB', opacity: 0.95 }}>
           <div className='bg-white rounded-2xl shadow-xl w-full max-w-md p-6'>
             <h2 className='text-lg font-bold text-gray-800 mb-1'>Walk-in Customer</h2>
             <p className='text-sm text-gray-400 mb-6'>Book a token for a customer who walked in</p>
