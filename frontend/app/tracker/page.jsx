@@ -221,7 +221,7 @@ export default function TrackerPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-brand-navy border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-500 text-sm">Loading your queue position...</p>
         </div>
       </div>
@@ -233,7 +233,7 @@ export default function TrackerPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white rounded-2xl border border-gray-200 p-8 w-full max-w-md text-center">
           <p className="text-red-500 font-semibold mb-4">{error}</p>
-          <a href="/booking" className="block w-full bg-blue-900 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition mb-3">
+          <a href="/booking" className="block w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition mb-3">
             Book a Token
           </a>
           <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-red-500 font-medium transition">
@@ -253,7 +253,7 @@ export default function TrackerPage() {
         {/* Header with logout */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-blue-900">iQueue</h1>
+            <h1 className="text-3xl font-bold text-brand-navy">iQueue</h1>
             <p className="text-gray-400 text-sm mt-1">Live Queue Tracker</p>
           </div>
           <button
@@ -267,9 +267,9 @@ export default function TrackerPage() {
         {/* Token number card */}
         <div className={`rounded-2xl border-2 p-6 mb-4 text-center ${config.bg} ${config.border}`}>
           <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Your Token</p>
-          <p className="text-7xl font-bold text-blue-900 mb-3">{token.tokenNumber}</p>
+          <p className="text-7xl font-bold text-brand-navy mb-3">{token.tokenNumber}</p>
           <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold ${config.badge}`}>
-            {config.pulse && <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>}
+            {config.pulse && <span className="w-2 h-2 bg-brand-teal rounded-full animate-pulse"></span>}
             {token.status}
           </span>
         </div>
@@ -297,15 +297,15 @@ export default function TrackerPage() {
         {!TERMINAL_STATUSES.includes(token.status) && token.status !== 'CALLED' && (
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
-              <p className="text-2xl font-bold text-blue-900">#{position}</p>
+              <p className="text-2xl font-bold text-brand-navy">#{position}</p>
               <p className="text-xs text-gray-400 mt-1">Position</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
-              <p className="text-2xl font-bold text-blue-900">~{position ? (position - 1) * 5 : 0}</p>
+              <p className="text-2xl font-bold text-brand-navy">~{position ? (position - 1) * 5 : 0}</p>
               <p className="text-xs text-gray-400 mt-1">Est. wait (min)</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-200 p-4 text-center">
-              <p className="text-lg font-bold text-blue-900">{nowServing || '--'}</p>
+              <p className="text-lg font-bold text-brand-navy">{nowServing || '--'}</p>
               <p className="text-xs text-gray-400 mt-1">Now serving</p>
             </div>
           </div>
@@ -323,7 +323,7 @@ export default function TrackerPage() {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-400">Counter</span>
-            <span className="text-sm font-medium text-blue-900">
+            <span className="text-sm font-medium text-brand-navy">
               {getCounterForService(token.serviceName).name} — {getCounterForService(token.serviceName).label}
             </span>
           </div>
@@ -350,7 +350,7 @@ export default function TrackerPage() {
           <div className="mb-4">
             <a
               href="/booking"
-              className="block w-full py-3 rounded-xl bg-blue-900 text-white font-semibold text-center hover:bg-blue-800 transition"
+              className="block w-full py-3 rounded-xl bg-brand-navy text-white font-semibold text-center hover:bg-blue-800 transition"
             >
               Book a New Token
             </a>
@@ -360,7 +360,7 @@ export default function TrackerPage() {
         {/* Live indicator */}
         {!TERMINAL_STATUSES.includes(token.status) && (
           <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mb-6">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            <span className="w-2 h-2 bg-brand-teal rounded-full animate-pulse"></span>
             <span>Live updates active</span>
           </div>
         )}
@@ -402,7 +402,7 @@ export default function TrackerPage() {
                 onClick={() => handleStatusChange(status)}
                 className={`text-xs font-semibold py-2 px-2 rounded-lg border-2 transition-all ${
                   token.status === status
-                    ? 'bg-blue-900 text-white border-blue-900'
+                    ? 'bg-brand-navy text-white border-brand-navy'
                     : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
                 }`}
               >
@@ -416,3 +416,5 @@ export default function TrackerPage() {
     </div>
   );
 }
+
+
