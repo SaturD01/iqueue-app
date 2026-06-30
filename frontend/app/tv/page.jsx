@@ -6,14 +6,14 @@ import { io } from 'socket.io-client';
 import api from '@/lib/api';
 
 const COUNTERS = [
-  { id: 1, name: 'Counter 1', label: 'Cash', color: 'blue', services: ['Cash Deposit'] },
-  { id: 2, name: 'Counter 2', label: 'Account & Inquiry', color: 'teal', services: ['Account Opening', 'General Inquiry', 'Document Submission'] },
-  { id: 3, name: 'Counter 3', label: 'Loans & Cards', color: 'indigo', services: ['Loan Inquiry', 'Card Services'] },
+  { id: 1, name: 'COUNTER 1', label: 'Cash', color: 'blue', services: ['Cash Deposit'] },
+  { id: 2, name: 'COUNTER 2', label: 'Account & Inquiry', color: 'teal', services: ['Account Opening', 'General Inquiry', 'Document Submission'] },
+  { id: 3, name: 'COUNTER 3', label: 'Loans & Cards', color: 'indigo', services: ['Loan Inquiry', 'Card Services'] },
 ];
 
 const COUNTER_COLORS = {
-  blue:   { bg: 'bg-brand-navy-light',   border: 'border-blue-500',   header: 'bg-brand-navy-light',   text: 'text-blue-300' },
-  teal:   { bg: 'bg-teal-800',   border: 'border-teal-500',   header: 'bg-teal-700',   text: 'text-teal-300' },
+  blue:   { bg: 'bg-brand-navy-light', border: 'border-blue-500', header: 'bg-brand-navy-light', text: 'text-blue-300' },
+  teal:   { bg: 'bg-teal-800', border: 'border-teal-500', header: 'bg-teal-700', text: 'text-teal-300' },
   indigo: { bg: 'bg-indigo-800', border: 'border-indigo-500', header: 'bg-indigo-700', text: 'text-indigo-300' },
 };
 
@@ -25,24 +25,11 @@ export default function TVDisplayPage() {
   const searchParams = useSearchParams();
   const branchId = searchParams.get('branch') || 'aaaaaa000000000000000001';
 
-  const [time, setTime] = useState('');
   const [counterData, setCounterData] = useState({
     1: { nowServing: null, upNext: [] },
     2: { nowServing: null, upNext: [] },
     3: { nowServing: null, upNext: [] },
   });
-  const [connected, setConnected] = useState(false);
-
-  // Clock
-  useEffect(() => {
-    const update = () => {
-      const now = new Date();
-      setTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }));
-    };
-    update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   const processQueue = (tokens) => {
     const data = {
@@ -50,7 +37,6 @@ export default function TVDisplayPage() {
       2: { nowServing: null, upNext: [] },
       3: { nowServing: null, upNext: [] },
     };
-
     tokens.forEach(token => {
       const counter = getCounterForService(token.serviceName);
       if (token.status === 'CALLED') {
@@ -59,7 +45,6 @@ export default function TVDisplayPage() {
         data[counter.id].upNext.push(token);
       }
     });
-
     setCounterData(data);
   };
 
@@ -72,107 +57,82 @@ export default function TVDisplayPage() {
     }
   }, [branchId]);
 
-  useEffect(() => {
-    fetchQueue();
-  }, [fetchQueue]);
+  useEffect(() => { fetchQueue(); }, [fetchQueue]);
 
-  // Socket.io
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
-
-    socket.on('connect', () => {
-      setConnected(true);
-      socket.emit('join:branch', branchId);
-    });
-
-    socket.on('disconnect', () => setConnected(false));
-
+    socket.on('connect', () => { socket.emit('join:branch', branchId); });
     socket.on('queue:updated', ({ queue }) => processQueue(queue || []));
     socket.on('token:called', () => fetchQueue());
     socket.on('token:booked', () => fetchQueue());
     socket.on('token:served', () => fetchQueue());
-
     return () => socket.disconnect();
   }, [branchId, fetchQueue]);
 
   return (
-    <div className='min-h-screen bg-brand-navy flex flex-col overflow-hidden'>
-
-      {/* Top bar */}
-      <div className='flex items-center justify-between px-8 py-4 border-b border-brand-navy-light'>
-        <div className='flex items-center gap-3'>
-          <span className='text-white font-bold text-2xl'>iQueue</span>
-          <span className='text-blue-400 text-sm'>Smart Bank Queue Management</span>
-        </div>
-        <div className='flex items-center gap-3'>
-          <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></span>
-          <span className='text-blue-300 text-sm font-mono'>{time}</span>
-        </div>
-      </div>
+    <div className='min-h-screen bg-brand-navy flex flex-col overflow-hidden p-4 gap-4'>
 
       {/* 3 Counter Columns */}
-      <div className='flex-1 grid grid-cols-3 gap-0 divide-x divide-brand-navy-light'>
+      <div className='flex-1 grid grid-cols-3 gap-4'>
         {COUNTERS.map(counter => {
           const colors = COUNTER_COLORS[counter.color];
           const { nowServing, upNext } = counterData[counter.id];
           return (
-            <div key={counter.id} className='flex flex-col'>
+            <div key={counter.id} className='flex flex-col rounded-2xl overflow-hidden border border-brand-navy-light'>
 
               {/* Counter Header */}
-              <div className={`${colors.header} px-6 py-4 text-center border-b border-brand-navy-light`}>
-                <p className='text-white font-bold text-lg'>{counter.name}</p>
-                <p className={`${colors.text} text-sm`}>{counter.label}</p>
+              <div className={`${colors.header} px-6 py-5 text-center`}>
+                <p className='text-white font-black tracking-widest' style={{ fontSize: 'clamp(22px, 2.5vw, 36px)' }}>{counter.name}</p>
+                <p className={`${colors.text} font-semibold mt-1`} style={{ fontSize: 'clamp(14px, 1.4vw, 20px)' }}>{counter.label}</p>
               </div>
 
               {/* NOW SERVING */}
-              <div className='flex-1 flex flex-col items-center justify-center px-6 py-8'>
-                <p className={`${colors.text} text-xs uppercase tracking-widest mb-3`}>Now Serving</p>
+              <div className='flex-1 flex flex-col items-center justify-center px-4 py-8 bg-brand-navy'>
+                <p className={`${colors.text} uppercase tracking-widest mb-4 font-bold`} style={{ fontSize: 'clamp(14px, 1.3vw, 20px)' }}>Now Serving</p>
                 {nowServing ? (
                   <>
-                    <p className='font-black text-white leading-none mb-3'
-                       style={{ fontSize: 'clamp(60px, 10vw, 120px)' }}>
+                    <p className='font-black text-white leading-none mb-4 whitespace-nowrap' style={{ fontSize: 'clamp(60px, 8vw, 120px)' }}>
                       {nowServing.tokenNumber}
                     </p>
-                    <div className={`${colors.bg} border ${colors.border} px-6 py-2 rounded-2xl`}>
-                      <p className='text-white text-sm font-medium text-center'>
-                        Please proceed to {counter.name}
+                    <div className={`${colors.bg} border-2 ${colors.border} px-6 py-2 rounded-xl`}>
+                      <p className='text-white font-semibold text-center' style={{ fontSize: 'clamp(14px, 1.3vw, 20px)' }}>
+                        Please proceed
                       </p>
                     </div>
                     {nowServing.status === 'PRIORITY' && (
-                      <p className='text-purple-300 text-xs mt-2 font-semibold'>★ Priority</p>
+                      <p className='text-purple-300 font-bold mt-3' style={{ fontSize: 'clamp(14px, 1.3vw, 18px)' }}>★ Priority</p>
                     )}
                   </>
                 ) : (
-                  <p className='font-black text-brand-navy-light leading-none'
-                     style={{ fontSize: 'clamp(40px, 7vw, 80px)' }}>
+                  <p className='font-black text-brand-navy-light leading-none' style={{ fontSize: 'clamp(50px, 7vw, 100px)' }}>
                     ---
                   </p>
                 )}
               </div>
 
               {/* Divider */}
-              <div className='border-t border-brand-navy-light mx-6'></div>
+              <div className='border-t border-brand-navy-light mx-4'></div>
 
               {/* UP NEXT */}
-              <div className='px-6 py-4'>
-                <p className={`${colors.text} text-xs uppercase tracking-widest mb-3 text-center`}>Up Next</p>
+              <div className='px-4 py-5 bg-brand-navy'>
+                <p className={`${colors.text} uppercase tracking-widest mb-3 text-center font-bold`} style={{ fontSize: 'clamp(12px, 1.1vw, 16px)' }}>Up Next</p>
                 {upNext.length === 0 ? (
-                  <p className='text-brand-navy-light text-center text-sm py-2'>No tokens waiting</p>
+                  <p className='text-brand-navy-light text-center py-3' style={{ fontSize: 'clamp(14px, 1.2vw, 18px)' }}>No tokens waiting</p>
                 ) : (
                   <div className='space-y-2'>
                     {upNext.slice(0, 3).map((token, index) => (
                       <div key={token._id}
-                        className={`rounded-xl p-3 text-center ${index === 0 ? `${colors.bg} border ${colors.border}` : 'bg-brand-navy-light'}`}>
-                        <p className={`font-bold text-white ${index === 0 ? 'text-2xl' : 'text-xl'}`}>
+                        className={`rounded-xl py-3 px-4 text-center ${index === 0 ? `${colors.bg} border-2 ${colors.border}` : 'bg-brand-navy-light'}`}>
+                        <p className='font-black text-white whitespace-nowrap' style={{ fontSize: index === 0 ? 'clamp(28px, 3.5vw, 48px)' : 'clamp(22px, 2.8vw, 38px)' }}>
                           {token.tokenNumber}
                         </p>
                         {token.status === 'PRIORITY' && (
-                          <p className='text-purple-300 text-xs mt-1'>★ Priority</p>
+                          <p className='text-purple-300 font-semibold mt-1' style={{ fontSize: 'clamp(11px, 1vw, 14px)' }}>★ Priority</p>
                         )}
                       </div>
                     ))}
                     {upNext.length > 3 && (
-                      <p className='text-blue-500 text-xs text-center mt-1'>
+                      <p className='text-blue-400 text-center mt-1 font-medium' style={{ fontSize: 'clamp(12px, 1vw, 16px)' }}>
                         +{upNext.length - 3} more waiting
                       </p>
                     )}
@@ -185,12 +145,6 @@ export default function TVDisplayPage() {
         })}
       </div>
 
-      {/* Footer */}
-      <div className='px-8 py-3 text-center border-t border-brand-navy-light'>
-        <p className='text-blue-500 text-xs'>
-          Please proceed to your assigned counter when your token is called — iQueue Smart Bank Queue Management
-        </p>
-      </div>
     </div>
   );
 }
