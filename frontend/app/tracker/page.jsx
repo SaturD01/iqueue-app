@@ -251,17 +251,17 @@ export default function TrackerPage() {
       <div className="max-w-md mx-auto">
 
         {/* Header with logout */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-brand-navy">iQueue</h1>
-            <p className="text-gray-400 text-sm mt-1">Live Queue Tracker</p>
-          </div>
+        <div className="relative mb-6">
           <button
             onClick={handleLogout}
-            className="text-sm text-gray-400 hover:text-red-500 font-medium transition"
+            className="absolute top-0 right-0 text-sm text-gray-400 hover:text-red-500 font-medium transition"
           >
             Logout
           </button>
+          <div className="text-center">
+            <img src="/logo.png" alt="iQueue" className="h-20 mx-auto mb-2" />
+            <p className="text-gray-400 text-sm">The Line Ends Here</p>
+          </div>
         </div>
 
         {/* Token number card */}
