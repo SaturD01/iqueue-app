@@ -49,10 +49,8 @@ export default function LoginPage() {
 
         {/* Header */}
         <div className='text-center mb-8'>
-          <div className='inline-block bg-brand-navy text-white px-6 py-2 rounded-xl mb-3'>
-            <h1 className='text-2xl font-bold'>iQueue</h1>
-          </div>
-          <p className='text-gray-400 text-sm'>Skip the queue. Bank smarter.</p>
+          <img src='/logo.png' alt='iQueue' className='h-32 mx-auto mb-3' />
+          <p className='text-gray-400 text-sm'>The Line Ends Here</p>
         </div>
 
         {/* Card */}
