@@ -62,7 +62,7 @@ export default function ManagerDashboardPage() {
       });
       setAiAnalysis(aiRes.data.recommendation);
     } catch (err) {
-      setAiAnalysis('AI analysis unavailable right now. Please try again later.');
+      setAiAnalysis('Analysis unavailable right now. Please try again later.');
     } finally {
       setLoadingAi(false);
     }
@@ -137,19 +137,19 @@ export default function ManagerDashboardPage() {
 
         {/* AI Analysis */}
         <div className='bg-white rounded-2xl border border-gray-200 p-6'>
-          <h3 className='text-sm font-semibold text-gray-700 mb-4'>AI Staffing Analysis</h3>
+          <h3 className='text-sm font-semibold text-gray-700 mb-4'>Staffing Analysis</h3>
           <button
             onClick={handleAiAnalysis}
             disabled={loadingAi}
-            className='w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition disabled:opacity-60 flex items-center justify-center gap-2'
+            className='w-full bg-brand-navy text-white py-3 rounded-xl font-semibold hover:bg-brand-teal transition disabled:opacity-60 flex items-center justify-center gap-2'
           >
             {loadingAi && (
               <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></span>
             )}
-            {loadingAi ? 'Analysing...' : 'Run AI Analysis'}
+            {loadingAi ? 'Analysing...' : 'Run Analysis'}
           </button>
           <div className={`mt-4 rounded-xl p-4 text-sm ${aiAnalysis ? 'bg-blue-50 border border-blue-200 text-brand-navy' : 'bg-gray-50 border border-gray-200 text-gray-400'}`}>
-            {aiAnalysis || 'AI analysis will appear here after you click Run AI Analysis.'}
+            {aiAnalysis || 'Analysis will appear here after you click Run Analysis.'}
           </div>
         </div>
 
@@ -157,3 +157,5 @@ export default function ManagerDashboardPage() {
     </div>
   );
 }
+
+
