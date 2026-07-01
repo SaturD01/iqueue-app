@@ -209,6 +209,7 @@ export default function StaffPanelPage() {
           <div className='bg-white rounded-lg px-3 py-1.5'>
             <img src='/logo.png' alt='iQueue' className='h-7' />
           </div>
+          <div className='h-6 w-px bg-blue-700'></div>
           <p className='text-blue-200 text-sm font-medium'>Staff Queue Panel</p>
         </div>
         <div className='flex items-center gap-3'>

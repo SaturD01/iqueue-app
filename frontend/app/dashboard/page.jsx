@@ -83,9 +83,14 @@ export default function ManagerDashboardPage() {
     <div className='min-h-screen bg-gray-50'>
 
       {/* Header */}
-      <div className='bg-brand-navy text-white px-6 py-4'>
-        <h1 className='text-xl font-bold'>iQueue</h1>
-        <p className='text-blue-300 text-sm'>Branch Analytics Dashboard</p>
+      <div className='bg-brand-navy text-white px-6 py-3 flex items-center justify-between'>
+        <div className='flex items-center gap-3'>
+          <div className='bg-white rounded-lg px-3 py-1.5'>
+            <img src='/logo.png' alt='iQueue' className='h-7' />
+          </div>
+          <div className='h-6 w-px bg-blue-700'></div>
+          <p className='text-blue-200 text-sm font-medium'>Branch Analytics Dashboard</p>
+        </div>
       </div>
 
       {fetchError && (
